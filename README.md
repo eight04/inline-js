@@ -101,7 +101,7 @@ var myCssString = $inline("./style.css|cssmin|stringify");
 
 Write your own transformer
 --------------------------
-Create a `.inline.js` file:
+Create a `.inline.js` file in your package root:
 ```
 module.exports = {
 	transformers: [{
