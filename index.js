@@ -74,9 +74,29 @@ function parseResource(text) {
 	return [tokens[0], tokens.slice(1)];
 }
 
+function getLineRange(text, pos) {
+	// FIXME: this might fail if \r\n messed up
+	var i, result = {};
+	i = text.lastIndexOf("\n", pos);
+	result.start = i + 1;
+	if (text[i - 1] == "\r") {
+		result.beforeStart = i - 1;
+	} else {
+		result.beforeStart = i;
+	}
+	i = text.indexOf("\n", pos);
+	if (text[i - 1] == "\r") {
+		result.end = i - 1;
+	} else {
+		result.end = i;
+	}
+	result.afterEnd = i + 1;
+	return result;
+}
+
 function* inlines(content) {
 	var vm = require("vm"),
-		re = /\$inline\([\s\S]+?\)/gi,
+		re = /\$inline((\.(start|line))?\([\s\S]+?\)|\.end)/gi,
 		match;
 		
 	function sandBox() {
@@ -85,7 +105,24 @@ function* inlines(content) {
 		};
 	}
 	
+	var defferedStart = null,
+		lr, result;
+	
 	while ((match = re.exec(content))) {
+		if (defferedStart) {
+			if (match[0] != "$inline.end") {
+				throw new Error(`Failed to match $inline.start at ${defferedStart.start}, missing $inline.end`);
+			}
+			lr = getLineRange(content, match.index);
+			defferedStart.end = lr.beforeStart;
+			if (defferedStart.start > defferedStart.end) {
+				throw new Error(`$inline.start and $inline.end must not present at the same line`);
+			}
+			yield defferedStart;
+			defferedStart = null;
+			continue;
+		}
+		
 		var [resource, ...args] = vm.runInNewContext(match[0], sandBox()),
 			transforms;
 		if (typeof resource == "string") {
@@ -93,12 +130,32 @@ function* inlines(content) {
 		}
 		transforms.push(...args);
 		transforms = normalizeTransforms(transforms);
-		yield {
+		
+		result = {
+			type: match[0].match(/^[^(]+/)[0],
 			start: match.index,
-			match: match[0],
 			end: re.lastIndex,
 			resource, transforms
 		};
+		
+		if (result.type == "$inline.start") {
+			lr = getLineRange(content, match.index);
+			result.start = lr.afterEnd;
+			defferedStart = result;
+			continue;
+		}
+		
+		if (result.type == "$inline.line") {
+			lr = getLineRange(content, match.index);
+			result.start = lr.start;
+			result.end = lr.end;
+		}
+		
+		yield result;
+	}
+	
+	if (defferedStart) {
+		throw new Error(`Failed to match $inline.start at ${defferedStart.start}, missing $inline.end`);
 	}
 }
 
