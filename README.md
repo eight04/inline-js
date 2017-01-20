@@ -117,6 +117,6 @@ module.exports = {
 Changelog
 ---------
 
-* 0.1.0 (Jan 19, 2017)
+* 0.1.0 (Jan 21, 2017)
 
     - First release.

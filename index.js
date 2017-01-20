@@ -141,6 +141,42 @@ function inline({resource, from, transformer, transforms, resourceCenter}) {
 	return content;
 }
 
+function moduleRoot() {
+	var path = require("pathlib"),
+		fs = require("fs"),
+		pkg = path("./folder/package.json").resolve();
+		
+	do {
+		pkg = pkg.move("..");
+		try {
+			fs.accessSync(pkg.path);
+		} catch (err) {
+			continue;
+		}
+		return pkg.dir().path;
+	} while (!pkg.dir().isRoot());
+}
+
+function loadConfig({transformer, resourceCenter}) {
+	var config = require("./.inline.js");
+	
+	transformer.load(config);
+	resourceCenter.load(config);
+	
+	var configPath = moduleRoot().extend(".inline.js").path;
+	
+	try {
+		config = require(configPath);
+	} catch (err) {
+		config = null;
+	}
+
+	if (config) {
+		transformer.load(config);
+		resourceCenter.load(config);
+	}
+}
+
 function init({
 	args: {
 		"--out": out,
@@ -151,10 +187,10 @@ function init({
 	transformer = createTransformer(),
 	resourceCenter = createResourceCenter()
 }) {
-	transformer.load(require("./.inline.js"));
-	resourceCenter.load(require("./.inline.js"));
 	
-	var path = require("path"),
+	loadConfig({transformer, resourceCenter});
+	
+	var path = require("pathlib"),
 		fs = require("fs-extra"),
 		resource = ["file", path.resolve(file)],
 		content = inline({resource, resourceCenter, transformer});
