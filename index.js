@@ -94,17 +94,19 @@ function getLineRange(text, pos) {
 	return result;
 }
 
+function sandBox() {
+	var o = {};
+	o.$inline = (...args) => args;
+	o.$inline.start = (...args) => args;
+	o.$inline.line = (...args) => args;
+	return o;
+}	
+
 function* inlines(content) {
 	var vm = require("vm"),
 		re = /\$inline((\.(start|line))?\([\s\S]+?\)|\.end)/gi,
 		match;
 		
-	function sandBox() {
-		return {
-			$inline: (...args) => args
-		};
-	}
-	
 	var defferedStart = null,
 		lr, result;
 	

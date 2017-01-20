@@ -1,8 +1,11 @@
 /* eslint no-console: 0 */
 var {describe, it} = require("mocha"),
-	{assert} = require("chai"),
+	chai = require("chai"),
+	{assert} = chai,
 	proxyquire = require("proxyquire"),
 	sinon = require("sinon");
+	
+chai.use(require("chai-subset"));
 	
 var content = "";
 
@@ -44,6 +47,24 @@ describe("inlines", () => {
 	it("transform", () => {
 		var [{transforms}] = [...inlines("$inline('./a.txt|t1|t2')")];
 		assert.deepEqual([["t1"], ["t2"]], transforms);
+	});
+	
+	it(".start .end", () => {
+		var [parsed] = [...inlines("$inline.start('./a.txt')\ntest\n$inline.end")];
+		assert.containSubset(parsed, {
+			type: "$inline.start",
+			start: 25,
+			end: 29
+		});
+	});
+	
+	it(".line", () => {
+		var [parsed] = [...inlines("test\ntest$inline.line('path/to/file')test\ntest")];
+		assert.containSubset(parsed, {
+			type: "$inline.line",
+			start: 5,
+			end: 41
+		});
 	});
 
 });
