@@ -39,14 +39,13 @@ describe("parseResource", () => {
 
 describe("inlines", () => {
 	
-	it("resource", () => {
-		var [{resource}] = [...inlines("$inline('./a.txt')")];
-		assert.deepEqual(["file", "./a.txt"], resource);
-	});
-	
-	it("transform", () => {
-		var [{transforms}] = [...inlines("$inline('./a.txt|t1|t2')")];
-		assert.deepEqual([["t1"], ["t2"]], transforms);
+	it("$inline", () => {
+		var [parsed] = [...inlines("$inline('path/to/file')")];
+		assert.containSubset(parsed, {
+			type: "$inline",
+			start: 0,
+			end: 23
+		});
 	});
 	
 	it(".start .end", () => {
