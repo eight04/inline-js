@@ -25,7 +25,7 @@ inlinejs a.txt
 ```
 Result:
 ```
-Hello inline!
+Hello world!
 ```
 
 Syntax
