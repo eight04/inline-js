@@ -18,7 +18,7 @@ var fsExtra = {
 };
 
 var {
-	inlines, parseResource
+	inlines, parseResource, inline
 } = proxyquire("../index", {fs, "fs-extra": fsExtra});
 
 describe("parseResource", () => {
@@ -66,4 +66,21 @@ describe("inlines", () => {
 		});
 	});
 
+});
+
+describe("inline", () => {
+	it("maxDepth", () => {
+		var resourceCenter = {
+				read: sinon.spy(() => {
+					assert.isBelow(resourceCenter.read.callCount, 20);
+					return "$inline('self')";
+				})
+			},
+			transformer = {
+				transform() {}
+			};
+		assert.throws(() => {
+			inline({resourceCenter, resource: ["file", "self"], maxDepth: 10, depth: 0, transformer});
+		}, "Max recursion depth 10");
+	});
 });

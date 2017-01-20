@@ -176,7 +176,11 @@ function createResourceCenter() {
 	};
 }
 
-function inline({resource, from, transformer, transforms, resourceCenter}) {
+function inline({resource, from, transformer, transforms, resourceCenter, depth, maxDepth}) {
+	if (depth > maxDepth) {
+		throw new Error(`Max recursion depth ${maxDepth} exceeded, if you are not making an infinite loop please increase --max-depth limit`);
+	}
+	
 	var content = resourceCenter.read({from, resource}),
 		text = [],
 		i = 0;
@@ -185,7 +189,9 @@ function inline({resource, from, transformer, transforms, resourceCenter}) {
 		Object.assign(result, {
 			from: resource,
 			transformer,
-			resourceCenter
+			resourceCenter,
+			depth: depth + 1,
+			maxDepth
 		});
 		text.push(content.slice(i, result.start), inline(result));
 		i = result.end;
@@ -240,6 +246,7 @@ function init({
 	args: {
 		"--out": out,
 		"--dry-run": dry,
+		"--max-depth": maxDepth,
 		"<entry_file>": file,
 	},
 	logger = createLogger(),
@@ -252,7 +259,7 @@ function init({
 	var path = require("pathlib"),
 		fs = require("fs-extra"),
 		resource = ["file", path.resolve(file)],
-		content = inline({resource, resourceCenter, transformer});
+		content = inline({resource, resourceCenter, transformer, depth: 0, maxDepth});
 	
 	if (out) {
 		if (!dry) {
@@ -264,5 +271,5 @@ function init({
 }
 
 module.exports = {
-	init, inlines, parseResource
+	init, inlines, parseResource, inline
 };
