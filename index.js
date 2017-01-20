@@ -153,7 +153,7 @@ function moduleRoot() {
 		} catch (err) {
 			continue;
 		}
-		return pkg.dir().path;
+		return pkg.dir();
 	} while (!pkg.dir().isRoot());
 }
 
