@@ -102,7 +102,7 @@ Builtin transformers
 Minify css content.
 
 ### dataurl
-Convert the content into dataurl. *Currently* our file reader only read file as utf8 encoded text, but it might be able to detect binary file in future release.
+Convert the content into dataurl.
 
 ### docstring
 Extract docstring (i.e. the first template literal) from the js file.
@@ -112,6 +112,22 @@ Eval JavaScript expression. You can access the content with `$0`.
 ```
 var version = $inline("./package.json|eval:JSON.parse($0).version|stringify");
 ```
+
+### markdown
+Wrap content with markdown codeblock, code, or quote.
+<pre><code>// a.txt
+some text
+
+// $inline("a.txt|markdown:codeblock")
+```
+some text
+```
+
+// $inline("a.txt|markdown:code")
+`some text`
+
+// $inline("a.txt|markdown:quote")
+> sometext</code></pre>
 
 ### parse
 `JSON.parse` the content. You can access property by specify property name.
@@ -146,6 +162,15 @@ module.exports = {
 
 Changelog
 ---------
+
+* 0.2.0 (Jan 21, 2017)
+
+	- Add $inline.open, close, skipStart, skipEnd, start, end, line.
+	- Add transformer docstring, markdown, parse.
+	- Change eval transformer.
+	- Improve logging.
+	- Add --max-depth option.
+	- Other bugfixes.
 
 * 0.1.0 (Jan 21, 2017)
 
