@@ -27,6 +27,11 @@ module.exports = {
 			return (new (require("clean-css"))).minify(content).styles;
 		}
 	}, {
+		name: "docstring",
+		transform(content) {
+			return content.match(/`((\\`|[^`])+)`/)[1];
+		}
+	}, {
 		name: "stringify",
 		transform(content) {
 			return JSON.stringify(content);
@@ -45,10 +50,31 @@ module.exports = {
 		}
 	}, {
 		name: "eval",
-		transform(content, getter) {
-			var vm = require("vm"),
-				code = `$=(${content}),${getter}`;
-			return vm.runInNewContext(code);
+		transform(content, code) {
+			var vm = require("vm");
+			return vm.runInNewContext(code, {$0: content});
+		}
+	}, {
+		name: "markdown",
+		transform(content, type) {
+			if (type == "codeblock") {
+				return "```\n" + content + "\n```";
+			}
+			if (type == "code") {
+				return "`" + content + "`";
+			}
+			if (type == "quote") {
+				return content.split("\n").map(l => "> " + l).join("\n");
+			}
+		}
+	}, {
+		name: "parse",
+		transform(content, ...props) {
+			var json = JSON.parse(content);
+			while (props.length) {
+				json = json[props.shift()];
+			}
+			return json;
 		}
 	}, {
 		name: "trim",
