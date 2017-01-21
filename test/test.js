@@ -3,7 +3,8 @@ var {describe, it} = require("mocha"),
 	chai = require("chai"),
 	{assert} = chai,
 	proxyquire = require("proxyquire"),
-	sinon = require("sinon");
+	sinon = require("sinon"),
+	conf = require("../.inline.js");
 	
 chai.use(require("chai-subset"));
 	
@@ -79,5 +80,30 @@ describe("inline", () => {
 		assert.throws(() => {
 			inline({resourceCenter, resource: ["file", "./self"], maxDepth: 10, depth: 0});
 		}, "Max recursion depth 10");
+	});
+});
+
+describe("transforms", () => {
+	var tr = {};
+	conf.transforms.forEach(tf => tr[tf.name] = tf.transform);
+	
+	it("eval", () => {
+		assert.equal(
+			tr.eval('{"hello": 123}', "JSON.parse($0).hello"),
+			123
+		);
+	});
+	
+	it("parse", () => {
+		var content = '{"version": "1.2.3","nested": {"prop": 123}}';
+		assert.equal(tr.parse(content, "version"), "1.2.3");
+		assert.equal(tr.parse(content, "nested", "prop"), 123);
+	});
+	
+	it("markdown", () => {
+		var content = "some text";
+		assert.equal(tr.markdown(content, "codeblock"), "```\nsome text\n```");
+		assert.equal(tr.markdown(content, "code"), "`some text`");
+		assert.equal(tr.markdown(content, "quote"), "> some text");
 	});
 });
