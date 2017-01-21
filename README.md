@@ -85,10 +85,7 @@ Usage:
 Options:
   -o --out FILE         Output file. Print to stdout if omitted.
   -d --max-depth COUNT  Max depth of the dependency tree. [default: 10]
-
-  -n --dry-run          Print the file name instead of writing. (not implement
-                        yet)
-
+  -n --dry-run          Print the file name instead of writing to disk.
   -h --help             Show this.
   -v --version          Show version.
 ```
