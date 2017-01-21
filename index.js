@@ -101,26 +101,52 @@ function getLineRange(text, pos) {
 	return result;
 }
 
-function sandBox() {
-	var o = {};
-	o.$inline = (...args) => args;
-	o.$inline.start = (...args) => args;
-	o.$inline.line = (...args) => args;
-	return o;
+function parseArguments(text) {
+	if (!text.includes("(")) return [];
+	var vm = require("vm");
+	text = text.replace(/^[^(]+/, "").slice(1, -1);
+	return vm.runInNewContext(`[${text}]`);
+}
+
+function parseInline(text) {
+	var resource, transforms, args;
+	
+	try {
+		[resource, ...args] = parseArguments(text);
+	} catch (err) {
+		throw new Error(`Failed to parse ${text}`);
+	}
+	if (typeof resource == "string") {
+		[resource, transforms] = parseResource(resource);
+	}
+	
+	transforms = normalizeTransforms(transforms);
+	
+	return {resource, transforms, args};
 }
 
 function* inlines(content) {
-	var vm = require("vm"),
-		re = /\$inline((\.(start|line))?\([\s\S]+?\)|\.end)/gi,
+	var re = /\$inline(\.(start|end|line|open|close|skipStart|skipEnd))?(\([\s\S]+?\))?/gi,
 		match;
 
 	var defferedStart = null,
-		lr, result;
+		defferedSkip = false,
+		defferedOpen = false,
+		lr, il, args, result;
 
 	while ((match = re.exec(content))) {
+		var type = match[0].match(/^[^(]+/)[0];
+		
+		if (defferedSkip) {
+			if (type == "$inline.skipEnd") {
+				defferedSkip = false;
+			}
+			continue;
+		}
+		
 		if (defferedStart) {
-			if (match[0] != "$inline.end") {
-				throw new Error(`Failed to match $inline.start at ${defferedStart.start}, missing $inline.end`);
+			if (type != "$inline.end") {
+				continue;
 			}
 			lr = getLineRange(content, match.index);
 			defferedStart.end = lr.beforeStart;
@@ -131,33 +157,66 @@ function* inlines(content) {
 			defferedStart = null;
 			continue;
 		}
-
-		var [resource, ...args] = vm.runInNewContext(match[0], sandBox()),
-			transforms;
-		if (typeof resource == "string") {
-			[resource, transforms] = parseResource(resource);
+		
+		if (defferedOpen) {
+			if (type != "$inline.close") {
+				continue;
+			}
+			args = parseArguments(match[0]);
+			defferedOpen.end = match.index - (args[0] || 0);
+			yield defferedOpen;
+			defferedOpen = null;
+			continue;
 		}
-		transforms.push(...args);
-		transforms = normalizeTransforms(transforms);
+		
+		if (type == "$inline.skipStart") {
+			defferedSkip = true;
+			continue;
+		}
+		
+		if (type == "$inline") {
+			il = parseInline(match[0]);
+			result = {
+				type,
+				resource: il.resource,
+				transforms: il.transforms,
+				start: match.index,
+				end: re.lastIndex
+			};
+		}
 
-		result = {
-			type: match[0].match(/^[^(]+/)[0],
-			start: match.index,
-			end: re.lastIndex,
-			resource, transforms
-		};
-
-		if (result.type == "$inline.start") {
+		if (type == "$inline.start") {
 			lr = getLineRange(content, match.index);
-			result.start = lr.afterEnd;
-			defferedStart = result;
+			il = parseInline(match[0]);
+			defferedStart = {
+				type,
+				resource: il.resource,
+				transforms: il.transforms,
+				start: lr.afterEnd
+			};
 			continue;
 		}
 
-		if (result.type == "$inline.line") {
+		if (type == "$inline.line") {
 			lr = getLineRange(content, match.index);
-			result.start = lr.start;
-			result.end = lr.end;
+			il = parseInline(match[0]);
+			result = {
+				type,
+				resource: il.resource,
+				transforms: il.transforms,
+				start: lr.start,
+				end: lr.end
+			};
+		}
+		
+		if (type == "$inline.open") {
+			il = parseInline(match[0]);
+			defferedOpen = {
+				type,
+				resource: il.resource,
+				transforms: il.transforms,
+				start: re.lastIndex + (il.args[0] || 0)
+			};
 		}
 
 		yield result;
@@ -165,6 +224,10 @@ function* inlines(content) {
 
 	if (defferedStart) {
 		throw new Error(`Failed to match $inline.start at ${defferedStart.start}, missing $inline.end`);
+	}
+	
+	if (defferedOpen) {
+		throw new Error(`Failed to match $inline.open at ${defferedOpen.start}, missing $inline.close`);
 	}
 }
 
