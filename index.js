@@ -1,12 +1,19 @@
 function createLogger() {
-	var readline = require("readline");
+	var readline = require("readline"),
+		logStream = process.stdout;
 	return {
-		log(data = "", end = "\n") {
+		print(data = "", end = "\n") {
 			process.stdout.write(data + end);
+		},
+		log(data = "", end = "\n") {
+			logStream.write(data + end);
 		},
 		clear() {
 			readline.clearLine(process.stdout, -1);
 			readline.cursorTo(process.stdout, 0, null);
+		},
+		startDebug() {
+			logStream = process.stderr;
 		}
 	};
 }
@@ -24,7 +31,7 @@ function createTransformer() {
 				if (pre) content = transformer({resource, transforms: pre, content});
 				content = transform(content, ...args);
 			}
-		
+
 			return content;
 		},
 		load: function({transforms = []}) {
@@ -53,7 +60,7 @@ function normalizeTransforms(arr) {
 function parseResource(text) {
 	// FIXME: use a text parser
 	var tokens = text.split("|");
-		
+
 	tokens = tokens.map(token => {
 		var o = [], i;
 		if ((i = token.indexOf(":")) < 0) {
@@ -66,11 +73,11 @@ function parseResource(text) {
 		}
 		return o;
 	});
-	
+
 	if (tokens[0].length == 1) {
 		tokens[0].unshift("file");
 	}
-	
+
 	return [tokens[0], tokens.slice(1)];
 }
 
@@ -100,16 +107,16 @@ function sandBox() {
 	o.$inline.start = (...args) => args;
 	o.$inline.line = (...args) => args;
 	return o;
-}	
+}
 
 function* inlines(content) {
 	var vm = require("vm"),
 		re = /\$inline((\.(start|line))?\([\s\S]+?\)|\.end)/gi,
 		match;
-		
+
 	var defferedStart = null,
 		lr, result;
-	
+
 	while ((match = re.exec(content))) {
 		if (defferedStart) {
 			if (match[0] != "$inline.end") {
@@ -124,7 +131,7 @@ function* inlines(content) {
 			defferedStart = null;
 			continue;
 		}
-		
+
 		var [resource, ...args] = vm.runInNewContext(match[0], sandBox()),
 			transforms;
 		if (typeof resource == "string") {
@@ -132,30 +139,30 @@ function* inlines(content) {
 		}
 		transforms.push(...args);
 		transforms = normalizeTransforms(transforms);
-		
+
 		result = {
 			type: match[0].match(/^[^(]+/)[0],
 			start: match.index,
 			end: re.lastIndex,
 			resource, transforms
 		};
-		
+
 		if (result.type == "$inline.start") {
 			lr = getLineRange(content, match.index);
 			result.start = lr.afterEnd;
 			defferedStart = result;
 			continue;
 		}
-		
+
 		if (result.type == "$inline.line") {
 			lr = getLineRange(content, match.index);
 			result.start = lr.start;
 			result.end = lr.end;
 		}
-		
+
 		yield result;
 	}
-	
+
 	if (defferedStart) {
 		throw new Error(`Failed to match $inline.start at ${defferedStart.start}, missing $inline.end`);
 	}
@@ -176,33 +183,39 @@ function createResourceCenter() {
 	};
 }
 
-function inline({resource, from, transformer, transforms, resourceCenter, depth, maxDepth}) {
+function inline({
+	resource, from, transformer = createTransformer(), transforms,
+	resourceCenter, depth = 0, maxDepth = 10, dependency = {}
+}) {
 	if (depth > maxDepth) {
 		throw new Error(`Max recursion depth ${maxDepth} exceeded, if you are not making an infinite loop please increase --max-depth limit`);
 	}
-	
+
 	var content = resourceCenter.read({from, resource}),
 		text = [],
 		i = 0;
-		
+
+	dependency = dependency[resource[1]] = {};
+
 	for (var result of inlines(content)) {
 		Object.assign(result, {
 			from: resource,
 			transformer,
 			resourceCenter,
 			depth: depth + 1,
-			maxDepth
+			maxDepth,
+			dependency
 		});
 		text.push(content.slice(i, result.start), inline(result));
 		i = result.end;
 	}
-	
+
 	text.push(content.slice(i));
-	
+
 	content = text.join("");
-	
+
 	content = transformer.transform({resource, transforms, content});
-		
+
 	return content;
 }
 
@@ -210,7 +223,7 @@ function moduleRoot() {
 	var path = require("pathlib"),
 		fs = require("fs"),
 		pkg = path("./folder/package.json").resolve();
-		
+
 	do {
 		pkg = pkg.move("..");
 		try {
@@ -222,14 +235,18 @@ function moduleRoot() {
 	} while (!pkg.dir().isRoot());
 }
 
-function loadConfig({transformer, resourceCenter}) {
+function loadConfig({transformer, resourceCenter, logger}) {
 	var config = require("./.inline.js");
-	
+
 	transformer.load(config);
 	resourceCenter.load(config);
-	
-	var configPath = moduleRoot().extend(".inline.js").path;
-	
+
+	var mr = moduleRoot();
+
+	if (!mr) return;
+
+	var configPath = mr.extend(".inline.js").path;
+
 	try {
 		config = require(configPath);
 	} catch (err) {
@@ -237,6 +254,7 @@ function loadConfig({transformer, resourceCenter}) {
 	}
 
 	if (config) {
+		logger.log(`Load ${configPath}\n`);
 		transformer.load(config);
 		resourceCenter.load(config);
 	}
@@ -253,20 +271,34 @@ function init({
 	transformer = createTransformer(),
 	resourceCenter = createResourceCenter()
 }) {
-	
-	loadConfig({transformer, resourceCenter});
-	
+	if (!dry && !out) {
+		logger.startDebug();
+	}
+
+	logger.log("inline-js started\n");
+
+	loadConfig({transformer, resourceCenter, logger});
+
 	var path = require("pathlib"),
 		fs = require("fs-extra"),
+		treeify = require("treeify"),
 		resource = ["file", path.resolve(file)],
-		content = inline({resource, resourceCenter, transformer, depth: 0, maxDepth});
-	
-	if (out) {
-		if (!dry) {
-			fs.outputFileSync(out, content);
-		}
+		dependency = {},
+		content = inline({
+			resource, resourceCenter, transformer, maxDepth, dependency
+		});
+
+	var [root] = Object.keys(dependency);
+	logger.log(`Result inline tree:`);
+	logger.log(root);
+	logger.log(treeify.asTree(dependency[root]));
+
+	if (dry) {
+		logger.log(`[dry] Output to ${out ? path.resolve(out) : "stdout"}`);
+	} else if (out) {
+		fs.outputFileSync(out, content);
 	} else {
-		logger.log(content, "");
+		logger.print(content, "");
 	}
 }
 

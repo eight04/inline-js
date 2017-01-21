@@ -73,14 +73,11 @@ describe("inline", () => {
 		var resourceCenter = {
 				read: sinon.spy(() => {
 					assert.isBelow(resourceCenter.read.callCount, 20);
-					return "$inline('self')";
+					return "$inline('./self')";
 				})
-			},
-			transformer = {
-				transform() {}
 			};
 		assert.throws(() => {
-			inline({resourceCenter, resource: ["file", "self"], maxDepth: 10, depth: 0, transformer});
+			inline({resourceCenter, resource: ["file", "./self"], maxDepth: 10, depth: 0});
 		}, "Max recursion depth 10");
 	});
 });
