@@ -9,7 +9,7 @@
     "preversion": "npm test",
     "version": "npm run build && git add .",
     "postversion": "git push --follow-tags && npm publish",
-    "build": "node index.js README.md -o README.md"
+    "build": "node cli.js README.md -o README.md"
   },
   "bin": {
     "inlinejs": "cli.js"
