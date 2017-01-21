@@ -7,8 +7,9 @@
   "scripts": {
     "test": "eslint **/*.js && mocha",
     "preversion": "npm test",
-    "version": "git add .",
-    "postversion": "git push --follow-tags && npm publish"
+    "version": "npm run build && git add .",
+    "postversion": "git push --follow-tags && npm publish",
+    "build": "node index.js README.md -o README.md"
   },
   "bin": {
     "inlinejs": "cli.js"
