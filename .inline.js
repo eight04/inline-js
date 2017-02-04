@@ -6,11 +6,11 @@ module.exports = {
 				fs = require("fs"),
 				src = ".";
 				
-			if (from && from[0] == "file") {
-				src = path(from[1]).dir();
+			if (from && from.name == "file") {
+				src = path(from.args).dir();
 			}
-			resource[1] = path(src).resolve(resource[1]).path;
-			return fs.readFileSync(resource[1], "utf8");
+			resource.args = path(src).resolve(resource.args).path;
+			return fs.readFileSync(resource.args, "utf8");
 		}
 	}],
 	transforms: [{

@@ -71,6 +71,13 @@ The content between .open and .close will be replaced. The additional argument i
 ```
 <!--$inline.open("path/to/file", 3)-->Replace me<!--$inline.close(4)-->
 ```
+### Use .shortcut
+Use .shortcut to deal with repeated patterns. Shortcut is composed by a name and a expanding pattern. You can use $1...$9 to referece the params.
+```
+// $inline.shortcut("pkg", "../package.json|parse:$1")
+var version = $inline("pkg:version"),
+	author = $inline("pkg:author");
+```
 
 CLI
 ----
@@ -142,11 +149,22 @@ var myCssString = $inline("./style.css|cssmin|stringify");
 ### trim
 `String.trim` the content.
 
-Write your own transformer
---------------------------
+Use `.inline.js`
+----------------
+You can create your transformer and shortcut with this file.
+
 Create a `.inline.js` file in your package root:
 ```
 module.exports = {
+	shortcuts: [{
+		name: "myshortcut",
+		expand: "pattern-to-expand",
+		// or use a function
+		expand: (file, arg1, arg2, ...args) {
+			// create expand pattern
+			return pattern;
+		}
+	}, ...],
 	transformers: [{
 		name: "mytransform",
 		transform: (content, arg1, arg2, ...args) {

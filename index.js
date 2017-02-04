@@ -19,17 +19,23 @@ function createLogger() {
 }
 
 function createTransformer() {
-	var map = new Map, self;
+	var map = new Map, self, haye = require("haye");
 	return self = {
 		add({name, transform, pre}) {
-			pre = normalizeTransforms(pre);
+			if (pre) {
+				pre = haye.fromPipe(pre).toArray();
+			}
 			map.set(name, {transform, pre});
 		},
-		transform: function transformer({resource, transforms = [], content}) {
-			for (var [name, ...args] of transforms) {
+		transform({resource, transforms = [], content}) {
+			for (var {name, args} of transforms) {
 				var {transform, pre} = map.get(name);
-				if (pre) content = transformer({resource, transforms: pre, content});
-				content = transform(content, ...args);
+				if (pre) content = self.transform({resource, transforms: pre, content});
+				if (Array.isArray(args)) {
+					content = transform(content, ...args);
+				} else {
+					content = transform(content, args);
+				}
 			}
 
 			return content;
@@ -38,47 +44,6 @@ function createTransformer() {
 			transforms.forEach(t => self.add(t));
 		}
 	};
-}
-
-function normalizeTransforms(arr) {
-	if (!arr) return;
-	var out = [];
-	if (typeof arr == "string") arr = [arr];
-	while (arr.length) {
-		var t = arr.shift();
-		if (Array.isArray(t)) {
-			out.push(t);
-		} else if (typeof t == "string") {
-			out.push([t]);
-		} else {
-			out[out.length - 1].push(t);
-		}
-	}
-	return out;
-}
-
-function parseResource(text) {
-	// FIXME: use a text parser
-	var tokens = text.split("|");
-
-	tokens = tokens.map(token => {
-		var o = [], i;
-		if ((i = token.indexOf(":")) < 0) {
-			o.push(null, ...token.split(","));
-			if (o.length == 2) {
-				o.shift();
-			}
-		} else {
-			o.push(token.slice(0, i), ...token.slice(i + 1).split(","));
-		}
-		return o;
-	});
-
-	if (tokens[0].length == 1) {
-		tokens[0].unshift("file");
-	}
-
-	return [tokens[0], tokens.slice(1)];
 }
 
 function getLineRange(text, pos) {
@@ -102,132 +67,182 @@ function getLineRange(text, pos) {
 }
 
 function parseArguments(text) {
-	if (!text.includes("(")) return [];
-	var vm = require("vm");
-	text = text.replace(/^[^(]+/, "").slice(1, -1);
-	return vm.runInNewContext(`[${text}]`);
+	var haye = require("haye"),
+		result = haye.fromPipe(text).toArray(),
+		resource = result[0],
+		transforms = result.slice(1);
+		
+	if (resource.args == null) {
+		resource.args = resource.name;
+		resource.name = "file";
+	}
+	
+	return {resource, transforms};
 }
 
-function parseInline(text) {
-	var resource, transforms, args;
-	
-	try {
-		[resource, ...args] = parseArguments(text);
-	} catch (err) {
-		throw new Error(`Failed to parse ${text}`);
+function parseRegex(text) {
+	var flags = text.match(/[a-z]*$/)[0];
+	return new RegExp(text.slice(1, -(flags.length + 1)), flags);
+}
+
+function parseString(text) {
+	if (text[0] == "'") {
+		text = '"' + text.slice(1, -1).replace(/([^\\]|$)"/g, '$1\\"') + '"';
 	}
-	if (typeof resource == "string") {
-		[resource, transforms] = parseResource(resource);
+	return JSON.parse(text);
+}
+
+function parseInline(text, pos = 0, flags = {}) {
+	var {default: jsTokens, matchToToken} = require("js-tokens"),
+		match, token, info = {type: "$inline"};
+		
+	jsTokens.lastIndex = pos;
+	jsTokens.exec(text);	// skip $inline
+	match = jsTokens.exec(text);
+	if (match[0] == ".") {
+		token = matchToToken(jsTokens.exec(text));
+		if (token.type != "name") {
+			throw new Error;
+		} else {
+			info.type += "." + token.value;
+		}
+		match = jsTokens.exec(text);
+		if (!match) {
+			info.end = text.length;
+			return info;
+		}
 	}
-	
-	transforms = normalizeTransforms(transforms);
-	
-	return {resource, transforms, args};
+	if (match[0] != "(") {
+		info.end = jsTokens.lastIndex;
+		return info;
+	}
+	info.params = [];
+	flags.needValue = true;
+	while ((match = jsTokens.exec(text))) {
+		token = matchToToken(match);
+		if (token.type == "whitespace" || token.type == "comment") {
+			continue;
+		}
+		if (token.value == ")") {
+			info.end = jsTokens.lastIndex;
+			break;
+		}
+		if (flags.needValue == (token.type == "punctuator")) {
+			throw new Error(`Failed to parse $inline statement at ${match.index}`);
+		} else {
+			flags.needValue = !flags.needValue;
+			if (token.type == "punctuator") continue;
+		}
+		if (token.type == "regex") {
+			token.value = parseRegex(token.value);
+		} else if (token.type == "number") {
+			token.value = +token.value;
+		} else if (token.type == "string") {
+			if (!token.closed) token.value += token.value[0];
+			token.value = parseString(token.value);
+		}
+		info.params.push(token.value);
+	}
+	if (!info.end) {
+		throw new Error("Missing right parenthesis");
+	}
+	return info;
 }
 
 function* inlines(content) {
-	var re = /\$inline(\.(start|end|line|open|close|skipStart|skipEnd))?(\([\s\S]+?\))?/gi,
-		match;
-
-	var defferedStart = null,
-		defferedSkip = false,
-		defferedOpen = false,
-		lr, il, args, result;
+	var re = /\$inline[.(]/gi,
+		match, type, params, 
+		flags = {};
 
 	while ((match = re.exec(content))) {
-		var type = match[0].match(/^[^(]+/)[0];
+		({type, params, end: re.lastIndex} = parseInline(content, match.index, flags));
 		
-		if (defferedSkip) {
+		if (flags.skip) {
 			if (type == "$inline.skipEnd") {
-				defferedSkip = false;
+				flags.skip = false;
 			}
 			continue;
 		}
 		
-		if (defferedStart) {
+		if (flags.start) {
 			if (type != "$inline.end") {
 				continue;
 			}
-			lr = getLineRange(content, match.index);
-			defferedStart.end = lr.beforeStart;
-			if (defferedStart.start > defferedStart.end) {
+			flags.start.end = getLineRange(content, match.index).beforeStart;
+			if (flags.start.start > flags.start.end) {
 				throw new Error(`$inline.start and $inline.end must not present at the same line`);
 			}
-			yield defferedStart;
-			defferedStart = null;
+			yield flags.start;
+			flags.start = null;
 			continue;
 		}
 		
-		if (defferedOpen) {
+		if (flags.open) {
 			if (type != "$inline.close") {
 				continue;
 			}
-			args = parseArguments(match[0]);
-			defferedOpen.end = match.index - (args[0] || 0);
-			yield defferedOpen;
-			defferedOpen = null;
+			var offset = params && params[0] || 0;
+			flags.open.end = match.index - offset;
+			yield flags.open;
+			flags.open = null;
 			continue;
 		}
 		
 		if (type == "$inline.skipStart") {
-			defferedSkip = true;
+			flags.skip = true;
 			continue;
 		}
 		
+		if (type == "$inline.start") {
+			flags.start = {
+				type, params,
+				start: getLineRange(content, match.index).afterEnd
+			};
+			continue;
+		}
+
+		if (type == "$inline.open") {
+			flags.open = {
+				type, params,
+				start: re.lastIndex + (params[1] || 0)
+			};
+			continue;
+		}
+
 		if (type == "$inline") {
-			il = parseInline(match[0]);
-			result = {
-				type,
-				resource: il.resource,
-				transforms: il.transforms,
+			yield {
+				type, params,
 				start: match.index,
 				end: re.lastIndex
 			};
+			continue;
 		}
-
-		if (type == "$inline.start") {
-			lr = getLineRange(content, match.index);
-			il = parseInline(match[0]);
-			defferedStart = {
-				type,
-				resource: il.resource,
-				transforms: il.transforms,
-				start: lr.afterEnd
+		
+		if (type == "$inline.line") {
+			var {start, end} = getLineRange(content, match.index);
+			yield {
+				type, params,
+				start, end
 			};
 			continue;
 		}
-
-		if (type == "$inline.line") {
-			lr = getLineRange(content, match.index);
-			il = parseInline(match[0]);
-			result = {
-				type,
-				resource: il.resource,
-				transforms: il.transforms,
-				start: lr.start,
-				end: lr.end
+		
+		if (type == "$inline.shortcut") {
+			yield {
+				type, params
 			};
+			continue;
 		}
 		
-		if (type == "$inline.open") {
-			il = parseInline(match[0]);
-			defferedOpen = {
-				type,
-				resource: il.resource,
-				transforms: il.transforms,
-				start: re.lastIndex + (il.args[0] || 0)
-			};
-		}
-
-		yield result;
+		throw new Error(`${type} is not a valid $inline statement`);
 	}
 
-	if (defferedStart) {
-		throw new Error(`Failed to match $inline.start at ${defferedStart.start}, missing $inline.end`);
+	if (flags.start) {
+		throw new Error(`Failed to match $inline.start at ${flags.start.start}, missing $inline.end`);
 	}
 	
-	if (defferedOpen) {
-		throw new Error(`Failed to match $inline.open at ${defferedOpen.start}, missing $inline.close`);
+	if (flags.open) {
+		throw new Error(`Failed to match $inline.open at ${flags.open.start}, missing $inline.close`);
 	}
 }
 
@@ -235,7 +250,7 @@ function createResourceCenter() {
 	var map = new Map, self;
 	return self = {
 		read({from, resource}) {
-			return map.get(resource[0])({from, resource});
+			return map.get(resource.name)({from, resource});
 		},
 		add({name, read}) {
 			map.set(name, read);
@@ -248,7 +263,7 @@ function createResourceCenter() {
 
 function inline({
 	resource, from, transformer = createTransformer(), transforms,
-	resourceCenter, depth = 0, maxDepth = 10, dependency = {}
+	resourceCenter, depth = 0, maxDepth = 10, dependency = {}, shortcuts = createShortcuts()
 }) {
 	if (depth > maxDepth) {
 		throw new Error(`Max recursion depth ${maxDepth} exceeded, if you are not making an infinite loop please increase --max-depth limit`);
@@ -258,20 +273,32 @@ function inline({
 		text = [],
 		i = 0;
 
-	dependency = dependency[resource[1]] = {};
+	dependency = dependency[resource.args] = {};
 
 	for (var result of inlines(content)) {
-		Object.assign(result, {
-			from: resource,
-			transformer,
-			resourceCenter,
-			depth: depth + 1,
-			maxDepth,
-			dependency
-		});
+		if (result.type == "$inline.shortcut") {
+			shortcuts.add(resource.args, ...result.params);
+			continue;
+		}
+		var args = shortcuts.expand(resource.args, result.params[0]);
+		Object.assign(
+			result,
+			parseArguments(args),
+			{
+				from: resource,
+				transformer,
+				resourceCenter,
+				shortcuts,
+				depth: depth + 1,
+				maxDepth,
+				dependency
+			}
+		);
 		text.push(content.slice(i, result.start), inline(result));
 		i = result.end;
 	}
+	
+	shortcuts.remove(resource.args);
 
 	text.push(content.slice(i));
 
@@ -298,11 +325,12 @@ function moduleRoot() {
 	} while (!pkg.dir().isRoot());
 }
 
-function loadConfig({transformer, resourceCenter, logger}) {
+function loadConfig({transformer, resourceCenter, logger, shortcuts}) {
 	var config = require("./.inline.js");
 
 	transformer.load(config);
 	resourceCenter.load(config);
+	shortcuts.load(config);
 
 	var mr = moduleRoot();
 
@@ -320,7 +348,77 @@ function loadConfig({transformer, resourceCenter, logger}) {
 		logger.log(`Load ${configPath}\n`);
 		transformer.load(config);
 		resourceCenter.load(config);
+		shortcuts.load(config);
 	}
+}
+
+function createShortcuts() {
+	var global = new Map,
+		local = new Map,
+		self;
+	function getExpandor(file, name) {
+		if (local.has(file) && local.get(file).has(name)) {
+			return local.get(file).get(name);
+		}
+		if (global.has(name)) {
+			return global.get(name);
+		}
+		return null;
+	}
+	return self = {
+		add(file, name, expand) {
+			if (!local.has(file)) {
+				local.set(file, new Map);
+			}
+			local.get(file).set(name, expand);
+		},
+		addGlobal({name, expand}) {
+			global.set(name, expand);
+		},
+		expand(file, args) {
+			var haye = require("haye"),
+				[shortcut, ...pipes] = haye.fromPipe(args).toArray(),
+				expandor = getExpandor(file, shortcut.name);
+			if (!expandor) {
+				return args;
+			}
+			if (!Array.isArray(shortcut.args)) {
+				shortcut.args = [shortcut.args];
+			}
+			var expanded;
+			if (typeof expandor == "function") {
+				expanded = expandor(file, ...shortcut.args);
+			} else if (typeof expandor == "string") {
+				expanded = expandor.replace(/\$(\d+|&)/g, (match, n) => {
+					if (n == "&") {
+						return shortcut.args.join(",");
+					}
+					return shortcut.args[n - 1];
+				});
+			} else {
+				throw new Error(`expandor must be a string or function: ${expandor}`);
+			}
+			pipes = pipes.map(({name, args}) => {
+				if (!args) {
+					return name;
+				}
+				name += ":";
+				if (!Array.isArray(args)) {
+					args = [args];
+				}
+				name += args.join(",");
+				return name;
+			});
+			
+			return [expanded].concat(pipes).join("|");
+		},
+		remove(file) {
+			local.delete(file);
+		},
+		load({shortcuts = []}) {
+			shortcuts.forEach(self.addGlobal);
+		}
+	};
 }
 
 function init({
@@ -332,7 +430,8 @@ function init({
 	},
 	logger = createLogger(),
 	transformer = createTransformer(),
-	resourceCenter = createResourceCenter()
+	resourceCenter = createResourceCenter(),
+	shortcuts = createShortcuts()
 }) {
 	if (!dry && !out) {
 		logger.startDebug();
@@ -340,15 +439,18 @@ function init({
 
 	logger.log("inline-js started\n");
 
-	loadConfig({transformer, resourceCenter, logger});
+	loadConfig({transformer, resourceCenter, logger, shortcuts});
 
 	var path = require("pathlib"),
 		fs = require("fs-extra"),
 		treeify = require("treeify"),
-		resource = ["file", path.resolve(file)],
+		resource = {
+			name: "file",
+			args: path.resolve(file)
+		},
 		dependency = {},
 		content = inline({
-			resource, resourceCenter, transformer, maxDepth, dependency
+			resource, resourceCenter, transformer, maxDepth, dependency, shortcuts
 		});
 
 	var [root] = Object.keys(dependency);
@@ -366,5 +468,5 @@ function init({
 }
 
 module.exports = {
-	init, inlines, parseResource, inline
+	init, inlines, inline, parseInline, createShortcuts,
 };
