@@ -178,6 +178,10 @@ module.exports = {
 Changelog
 ---------
 
+* 0.3.0 (Feb 4, 2017)
+
+	- Add $inline.shortcut.
+
 * 0.2.0 (Jan 21, 2017)
 
 	- Add $inline.open, close, skipStart, skipEnd, start, end, line.
