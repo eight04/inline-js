@@ -15,7 +15,7 @@ You have two files, `a.txt` and `b.txt`.
 <!-- $inline.skipStart -->
 ```
 // a.txt
-$inline("./a.txt");
+$inline("./b.txt");
 
 // b.txt
 Hello world!
