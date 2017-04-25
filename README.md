@@ -160,14 +160,14 @@ module.exports = {
 		name: "myshortcut",
 		expand: "pattern-to-expand",
 		// or use a function
-		expand: (file, arg1, arg2, ...args) {
+		expand: function (file, arg1, arg2, ...args) {
 			// create expand pattern
 			return pattern;
 		}
 	}, ...],
 	transformers: [{
 		name: "mytransform",
-		transform: (content, arg1, arg2, ...args) {
+		transform: function (content, arg1, arg2, ...args) {
 			// do something to the content
 			return content;
 		}
