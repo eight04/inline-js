@@ -165,7 +165,7 @@ module.exports = {
 			return pattern;
 		}
 	}, ...],
-	transformers: [{
+	transforms: [{
 		name: "mytransform",
 		transform: function (content, arg1, arg2, ...args) {
 			// do something to the content
