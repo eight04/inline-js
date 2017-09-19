@@ -178,6 +178,10 @@ module.exports = {
 Changelog
 ---------
 
+* 0.3.1 (Sep 19, 2017)
+
+	- Fix crlf error. [#3](https://github.com/eight04/inline-js/issues/3)
+
 * 0.3.0 (Feb 4, 2017)
 
 	- Add $inline.shortcut.
