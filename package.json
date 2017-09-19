@@ -9,7 +9,8 @@
     "preversion": "npm test",
     "version": "npm run build && git add .",
     "postversion": "git push --follow-tags && npm publish",
-    "build": "node cli.js README.md -o README.md"
+    "build": "node cli.js README.md -o README.md",
+    "prepack": "crlf --set=LF cli.js"
   },
   "bin": {
     "inlinejs": "cli.js"
@@ -27,6 +28,7 @@
   "devDependencies": {
     "chai": "^3.5.0",
     "chai-subset": "^1.4.0",
+    "crlf": "^1.1.1",
     "mocha": "^3.2.0",
     "proxyquire": "^1.7.10",
     "sinon": "^1.17.7"
