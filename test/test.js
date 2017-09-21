@@ -184,7 +184,7 @@ describe("transforms", () => {
 		assert.equal(tr.dataurl("test.css", content), result);
 		
 		content = fs.readFileSync(`${__dirname}/base64/test.png`);
-		result = fs.readFileSync(`${__dirname}/base64/test.png-base64.txt`);
+		result = fs.readFileSync(`${__dirname}/base64/test.png-base64.txt`, "utf8");
 		assert.equal(tr.dataurl("test.png", content), result);
 	});
 });
