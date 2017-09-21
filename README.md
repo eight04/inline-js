@@ -108,6 +108,21 @@ Minify css content.
 ### dataurl
 Convert the content into dataurl.
 
+The transformer would determine the mimetype from filename:
+```
+$inline("mystyle.css|dataurl")
+->
+data:text/css;charset=utf8;base64,...
+```
+Or you can pass the mimetype manually:
+```
+$inline("somefile.txt|dataurl:text/css")
+```
+Specify charset (default to `utf8`):
+```
+$inline("somefile.txt|dataurl:text/css,utf8")
+```
+
 ### docstring
 Extract docstring (i.e. the first template literal) from the js file.
 
