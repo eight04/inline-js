@@ -39,9 +39,12 @@ module.exports = {
 	}, {
 		name: "dataurl",
 		transform(content, type = "text/plain", charset = "") {
-			if (!Buffer.isBuffer(content)) {
+			if (charset || type.startsWith("text")) {
+				// text file
 				if (!charset) charset = "utf8";
-				content = Buffer.from(content, charset);
+				if (!Buffer.isBuffer(content)) {
+					content = Buffer.from(content, charset);
+				}
 			}
 			if (charset) {
 				charset = `;charset=${charset}`;

@@ -175,4 +175,16 @@ describe("transforms", () => {
 		assert.equal(tr.markdown(content, "code"), "`some text`");
 		assert.equal(tr.markdown(content, "quote"), "> some text");
 	});
+	
+	it("base64", () => {
+		const fs = require("fs");
+		let content, result;
+		content = fs.readFileSync(`${__dirname}/base64/test.css`);
+		result = fs.readFileSync(`${__dirname}/base64/test.css-base64.txt`, "utf8");
+		assert.equal(tr.dataurl(content, "text/css"), result);
+		
+		content = fs.readFileSync(`${__dirname}/base64/test.png`);
+		result = fs.readFileSync(`${__dirname}/base64/test.png-base64.txt`);
+		assert.equal(tr.dataurl(content, "image/png"), result);
+	});
 });
