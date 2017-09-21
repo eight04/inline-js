@@ -158,22 +158,22 @@ describe("transforms", () => {
 	
 	it("eval", () => {
 		assert.equal(
-			tr.eval('{"hello": 123}', "JSON.parse($0).hello"),
+			tr.eval(null, '{"hello": 123}', "JSON.parse($0).hello"),
 			123
 		);
 	});
 	
 	it("parse", () => {
 		var content = '{"version": "1.2.3","nested": {"prop": 123}}';
-		assert.equal(tr.parse(content, "version"), "1.2.3");
-		assert.equal(tr.parse(content, "nested", "prop"), 123);
+		assert.equal(tr.parse(null, content, "version"), "1.2.3");
+		assert.equal(tr.parse(null, content, "nested", "prop"), 123);
 	});
 	
 	it("markdown", () => {
 		var content = "some text";
-		assert.equal(tr.markdown(content, "codeblock"), "```\nsome text\n```");
-		assert.equal(tr.markdown(content, "code"), "`some text`");
-		assert.equal(tr.markdown(content, "quote"), "> some text");
+		assert.equal(tr.markdown(null, content, "codeblock"), "```\nsome text\n```");
+		assert.equal(tr.markdown(null, content, "code"), "`some text`");
+		assert.equal(tr.markdown(null, content, "quote"), "> some text");
 	});
 	
 	it("base64", () => {
@@ -181,10 +181,10 @@ describe("transforms", () => {
 		let content, result;
 		content = fs.readFileSync(`${__dirname}/base64/test.css`);
 		result = fs.readFileSync(`${__dirname}/base64/test.css-base64.txt`, "utf8");
-		assert.equal(tr.dataurl(content, "text/css"), result);
+		assert.equal(tr.dataurl("test.css", content), result);
 		
 		content = fs.readFileSync(`${__dirname}/base64/test.png`);
 		result = fs.readFileSync(`${__dirname}/base64/test.png-base64.txt`);
-		assert.equal(tr.dataurl(content, "image/png"), result);
+		assert.equal(tr.dataurl("test.png", content), result);
 	});
 });

@@ -31,11 +31,14 @@ function createTransformer() {
 			for (var {name, args} of transforms) {
 				var {transform, pre} = map.get(name);
 				if (pre) content = self.transform({resource, transforms: pre, content});
-				if (Array.isArray(args)) {
-					content = transform(content, ...args);
-				} else {
-					content = transform(content, args);
+				if (!Array.isArray(args)) {
+					if (args == null) {
+						args = [];
+					} else {
+						args = [args];
+					}
 				}
+				content = transform(resource.args, content, ...args);
 			}
 
 			return content;

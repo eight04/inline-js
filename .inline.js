@@ -15,7 +15,7 @@ module.exports = {
 	}],
 	transforms: [{
 		name: "string",
-		transform(content, encoding = "utf8") {
+		transform(file, content, encoding = "utf8") {
 			if (Buffer.isBuffer(content)) {
 				content = content.toString(encoding);
 			}
@@ -23,24 +23,28 @@ module.exports = {
 		}
 	}, {
 		name: "cssmin",
-		transform(content) {
+		transform(file, content) {
 			return (new (require("clean-css"))).minify(content).styles;
 		}
 	}, {
 		name: "docstring",
-		transform(content) {
+		transform(file, content) {
 			return content.match(/`((\\`|[^`])+)`/)[1];
 		}
 	}, {
 		name: "stringify",
-		transform(content) {
+		transform(file, content) {
 			return JSON.stringify(content);
 		}
 	}, {
 		name: "dataurl",
-		transform(content, type = "text/plain", charset = "") {
-			if (charset || type.startsWith("text")) {
-				// text file
+		transform(
+			file,
+			content,
+			type = require("mime").getType(file) || "text/plain",
+			charset = ""
+		) {
+			if (!Buffer.isBuffer(content) || type.startsWith("text")) {
 				if (!charset) charset = "utf8";
 				if (!Buffer.isBuffer(content)) {
 					content = Buffer.from(content, charset);
@@ -53,13 +57,13 @@ module.exports = {
 		}
 	}, {
 		name: "eval",
-		transform(content, code) {
+		transform(file, content, code) {
 			var vm = require("vm");
 			return vm.runInNewContext(code, {$0: content});
 		}
 	}, {
 		name: "markdown",
-		transform(content, type) {
+		transform(file, content, type) {
 			if (type == "codeblock") {
 				return "```\n" + content + "\n```";
 			}
@@ -72,7 +76,7 @@ module.exports = {
 		}
 	}, {
 		name: "parse",
-		transform(content, ...props) {
+		transform(file, content, ...props) {
 			var json = JSON.parse(content);
 			while (props.length) {
 				json = json[props.shift()];
@@ -81,7 +85,7 @@ module.exports = {
 		}
 	}, {
 		name: "trim",
-		transform(content) {
+		transform(file, content) {
 			return content.trim();
 		}
 	}]
