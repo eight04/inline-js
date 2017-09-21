@@ -193,6 +193,12 @@ module.exports = {
 Changelog
 ---------
 
+* 0.4.0 (Sep 22, 2017)
+
+	- Fix: dataurl is unable to handle binary file.
+	- **Change: now transformer would recieve a `file` argument.**
+	- Add: make `dataurl` determine mimetype by filename.
+
 * 0.3.1 (Sep 19, 2017)
 
 	- Fix crlf error. [#3](https://github.com/eight04/inline-js/issues/3)
