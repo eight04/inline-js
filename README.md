@@ -182,7 +182,7 @@ module.exports = {
 	}, ...],
 	transforms: [{
 		name: "mytransform",
-		transform: function (content, arg1, arg2, ...args) {
+		transform: function (file, content, arg1, arg2, ...args) {
 			// do something to the content
 			return content;
 		}
