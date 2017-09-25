@@ -307,17 +307,21 @@ function inline({
 		shortcuts.remove(resource.args);
 
 		text.push(content.slice(i));
-
-		content = text.join("");
+		
+		if (text.some(Buffer.isBuffer)) {
+			content = Buffer.concat(text.map(b => {
+				if (!Buffer.isBuffer(b)) {
+					b = Buffer.from(b, "binary");
+				}
+				return b;
+			}));
+		} else {
+			content = text.join("");
+		}
 	}
 	
 	content = transformer.transform({resource, transforms, content});
 	
-	if (Buffer.isBuffer(content)) {
-		content = content.toString("binary");
-		state.isBinary = true;
-	}
-
 	return content;
 }
 
@@ -475,10 +479,8 @@ function init({
 		logger.log(`[dry] Output to ${out ? path.resolve(out) : "stdout"}`);
 	} else if (out) {
 		fs.outputFileSync(out, content);
-	} else if (state.isBinary) {
-		process.stdout.write(Buffer.from(content, "binary"));
 	} else {
-		logger.print(content, "");
+		process.stdout.write(content);
 	}
 }
 
