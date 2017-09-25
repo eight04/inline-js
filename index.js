@@ -266,7 +266,7 @@ function createResourceCenter() {
 
 function inline({
 	resource, from, transformer = createTransformer(), transforms,
-	resourceCenter, depth = 0, maxDepth = 10, dependency = {}, shortcuts = createShortcuts()
+	resourceCenter, depth = 0, maxDepth = 10, dependency = {}, shortcuts = createShortcuts(), state
 }) {
 	if (depth > maxDepth) {
 		throw new Error(`Max recursion depth ${maxDepth} exceeded, if you are not making an infinite loop please increase --max-depth limit`);
@@ -296,7 +296,8 @@ function inline({
 					shortcuts,
 					depth: depth + 1,
 					maxDepth,
-					dependency
+					dependency,
+					state
 				}
 			);
 			text.push(content.slice(i, result.start), inline(result));
@@ -314,6 +315,7 @@ function inline({
 	
 	if (Buffer.isBuffer(content)) {
 		content = content.toString("binary");
+		state.isBinary = true;
 	}
 
 	return content;
@@ -441,7 +443,8 @@ function init({
 	logger = createLogger(),
 	transformer = createTransformer(),
 	resourceCenter = createResourceCenter(),
-	shortcuts = createShortcuts()
+	shortcuts = createShortcuts(),
+	state = {}
 }) {
 	if (!dry && !out) {
 		logger.startDebug();
@@ -460,7 +463,7 @@ function init({
 		},
 		dependency = {},
 		content = inline({
-			resource, resourceCenter, transformer, maxDepth, dependency, shortcuts
+			resource, resourceCenter, transformer, maxDepth, dependency, shortcuts, state
 		});
 
 	var [root] = Object.keys(dependency);
@@ -472,6 +475,8 @@ function init({
 		logger.log(`[dry] Output to ${out ? path.resolve(out) : "stdout"}`);
 	} else if (out) {
 		fs.outputFileSync(out, content);
+	} else if (state.isBinary) {
+		process.stdout.write(Buffer.from(content, "binary"));
 	} else {
 		logger.print(content, "");
 	}
