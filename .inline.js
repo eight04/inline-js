@@ -2,7 +2,7 @@ function readFile(from, resource, isBinary) {
 	var path = require("pathlib"),
 		fs = require("fs"),
 		src = ".";
-	if (from && from.name == "file") {
+	if (from) {
 		src = path(from.args).dir();
 	}
 	resource.args = path(src).resolve(resource.args).path;
