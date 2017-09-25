@@ -1,36 +1,33 @@
-function normalizePath(from, resource) {
+function readFile(from, resource, isBinary) {
 	var path = require("pathlib"),
+		fs = require("fs"),
 		src = ".";
-
 	if (from && from.name == "file") {
 		src = path(from.args).dir();
 	}
 	resource.args = path(src).resolve(resource.args).path;
+	if (isBinary) {
+		return fs.readFileSync(resource.args);
+	}
+	return fs.readFileSync(resource.args, "utf8");
 }
 
 module.exports = {
 	resources: [{
 		name: "file",
 		read({from, resource}) {
-			normalizePath(from, resource);
-			var fs = require("fs");
-			if (require('is-binary-path')(resource.args)) {
-				return fs.readFileSync(resource.args);
-			}
-			return fs.readFileSync(resource.args, "utf8");
+			return readFile(
+				from, resource, require('is-binary-path')(resource.args));
 		}
 	}, {
 		name: "raw",
 		read({from, resource}) {
-			normalizePath(from, resource);
-			const fs = require("fs");
-			return fs.readFileSync(resource.args);
+			return readFile(from, resource, true);
 		}
 	}, {
 		name: "text",
 		read({from, resource}) {
-			normalizePath(from, resource);
-			return require("fs").readFileSync(resource.args, "utf8");
+			return readFile(from, resource, false);
 		}
 	}],
 	transforms: [{

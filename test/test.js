@@ -188,3 +188,38 @@ describe("transforms", () => {
 		assert.equal(tr.dataurl("test.png", content), result);
 	});
 });
+
+describe("resource center", () => {
+	const rs = conf.resources.reduce((o, r) => {
+		o[r.name] = ext => {
+			const content = r.read({resource: {
+				args: `${__dirname}/base64/test${ext}`}});
+			if (typeof content === "string") {
+				return "string";
+			}
+			if (Buffer.isBuffer(content)) {
+				return "buffer";
+			}
+			throw new Error("Unknown type");
+		};
+		return o;
+	}, {});
+	
+	it("file", () => {
+		assert.equal(rs.file(""), "string");
+		assert.equal(rs.file(".css"), "string");
+		assert.equal(rs.file(".png"), "buffer");
+	});
+	
+	it("raw", () => {
+		assert.equal(rs.raw(""), "buffer");
+		assert.equal(rs.raw(".css"), "buffer");
+		assert.equal(rs.raw(".png"), "buffer");
+	});
+	
+	it("text", () => {
+		assert.equal(rs.text(""), "string");
+		assert.equal(rs.text(".css"), "string");
+		assert.equal(rs.text(".png"), "string");
+	});
+});
