@@ -1,16 +1,36 @@
+function normalizePath(from, resource) {
+	var path = require("pathlib"),
+		src = ".";
+
+	if (from && from.name == "file") {
+		src = path(from.args).dir();
+	}
+	resource.args = path(src).resolve(resource.args).path;
+}
+
 module.exports = {
 	resources: [{
 		name: "file",
 		read({from, resource}) {
-			var path = require("pathlib"),
-				fs = require("fs"),
-				src = ".";
-				
-			if (from && from.name == "file") {
-				src = path(from.args).dir();
+			normalizePath(from, resource);
+			var fs = require("fs");
+			if (require('is-binary-path')(resource.args)) {
+				return fs.readFileSync(resource.args);
 			}
-			resource.args = path(src).resolve(resource.args).path;
 			return fs.readFileSync(resource.args, "utf8");
+		}
+	}, {
+		name: "raw",
+		read({from, resource}) {
+			normalizePath(from, resource);
+			const fs = require("fs");
+			return fs.readFileSync(resource.args);
+		}
+	}, {
+		name: "text",
+		read({from, resource}) {
+			normalizePath(from, resource);
+			return require("fs").readFileSync(resource.args, "utf8");
 		}
 	}],
 	transforms: [{
