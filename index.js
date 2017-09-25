@@ -272,42 +272,49 @@ function inline({
 		throw new Error(`Max recursion depth ${maxDepth} exceeded, if you are not making an infinite loop please increase --max-depth limit`);
 	}
 
-	var content = resourceCenter.read({from, resource}),
-		text = [],
-		i = 0;
-
 	dependency = dependency[resource.args] = {};
 
-	for (var result of inlines(content)) {
-		if (result.type == "$inline.shortcut") {
-			shortcuts.add(resource.args, ...result.params);
-			continue;
-		}
-		var args = shortcuts.expand(resource.args, result.params[0]);
-		Object.assign(
-			result,
-			parseArguments(args),
-			{
-				from: resource,
-				transformer,
-				resourceCenter,
-				shortcuts,
-				depth: depth + 1,
-				maxDepth,
-				dependency
+	var content = resourceCenter.read({from, resource});
+	
+	if (typeof content === 'string') {
+		var text = [],
+			i = 0;
+
+		for (var result of inlines(content)) {
+			if (result.type == "$inline.shortcut") {
+				shortcuts.add(resource.args, ...result.params);
+				continue;
 			}
-		);
-		text.push(content.slice(i, result.start), inline(result));
-		i = result.end;
+			var args = shortcuts.expand(resource.args, result.params[0]);
+			Object.assign(
+				result,
+				parseArguments(args),
+				{
+					from: resource,
+					transformer,
+					resourceCenter,
+					shortcuts,
+					depth: depth + 1,
+					maxDepth,
+					dependency
+				}
+			);
+			text.push(content.slice(i, result.start), inline(result));
+			i = result.end;
+		}
+		
+		shortcuts.remove(resource.args);
+
+		text.push(content.slice(i));
+
+		content = text.join("");
 	}
 	
-	shortcuts.remove(resource.args);
-
-	text.push(content.slice(i));
-
-	content = text.join("");
-
 	content = transformer.transform({resource, transforms, content});
+	
+	if (Buffer.isBuffer(content)) {
+		content = content.toString("binary");
+	}
 
 	return content;
 }
