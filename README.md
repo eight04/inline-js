@@ -99,7 +99,7 @@ $inline("file.png")
 You can explicitly specify the file type:
 
 ```
-// utf8 string
+// string
 $inline("text:myfile")
 
 // buffer
