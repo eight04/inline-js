@@ -79,6 +79,33 @@ var version = $inline("pkg:version"),
 	author = $inline("pkg:author");
 ```
 
+Working with binary
+-------------------
+
+There are some transformers behave differently according to the type of content which is string or Buffer, e.g. `dataurl` transformer.
+
+By the default, inline-js would determine the file type according to its extension:
+
+```
+// string
+$inline("file.txt")
+
+// buffer
+$inline("file.png")
+```
+
+> Note: a text file would be read as utf8 string
+
+You can explicitly specify the file type:
+
+```
+// utf8 string
+$inline("text:myfile")
+
+// buffer
+$inline("raw:myfile")
+```
+
 CLI
 ----
 <!-- $inline.skipEnd -->
@@ -192,6 +219,12 @@ module.exports = {
 
 Changelog
 ---------
+
+* 0.5.0 (Sep 26, 2017)
+
+	- **Change: now the file would be read as binary accroding to its extension.**
+	- Add: ability to read/write binary file.
+	- Add: source type `text`, `raw`.
 
 * 0.4.0 (Sep 22, 2017)
 
