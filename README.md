@@ -137,15 +137,17 @@ Convert the content into dataurl.
 
 The transformer would determine the mimetype from filename:
 ```
+// data:text/css;charset=utf8;base64,...
 $inline("mystyle.css|dataurl")
-->
-data:text/css;charset=utf8;base64,...
+
+// data:image/png;base64,...
+$inline("myimage.png|dataurl")
 ```
 Or you can pass the mimetype manually:
 ```
 $inline("somefile.txt|dataurl:text/css")
 ```
-Specify charset (default to `utf8`):
+Specify charset (default to `utf8` for text file):
 ```
 $inline("somefile.txt|dataurl:text/css,utf8")
 ```
