@@ -29,6 +29,14 @@ module.exports = {
 		read({from, resource}) {
 			return readFile(from, resource, false);
 		}
+	}, {
+		name: "cmd",
+		read({from, resource}) {
+			const path = require("pathlib");
+			const cwd = from ? path(from.args).dir().path : ".";
+			const {execSync} = require("child_process");
+			return execSync(resource.args, {cwd});
+		}
 	}],
 	transforms: [{
 		name: "string",

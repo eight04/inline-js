@@ -191,35 +191,46 @@ describe("transforms", () => {
 
 describe("resource center", () => {
 	const rs = conf.resources.reduce((o, r) => {
-		o[r.name] = ext => {
-			const content = r.read({resource: {
-				args: `${__dirname}/base64/test${ext}`}});
-			if (typeof content === "string") {
-				return "string";
+		o[r.name] = args => {
+			const result = {
+				content: r.read({
+					resource: {args}
+				})
+			};
+			if (typeof result.content === "string") {
+				result.type = "string";
+			} else if (Buffer.isBuffer(result.content)) {
+				result.type = "buffer";
+			} else {
+				throw new Error("Unknown type");
 			}
-			if (Buffer.isBuffer(content)) {
-				return "buffer";
-			}
-			throw new Error("Unknown type");
+			return result;
 		};
 		return o;
 	}, {});
 	
+	const F = `${__dirname}/base64/test`;
+	
 	it("file", () => {
-		assert.equal(rs.file(""), "string");
-		assert.equal(rs.file(".css"), "string");
-		assert.equal(rs.file(".png"), "buffer");
+		assert.equal(rs.file(F).type, "string");
+		assert.equal(rs.file(F + ".css").type, "string");
+		assert.equal(rs.file(F + ".png").type, "buffer");
 	});
 	
 	it("raw", () => {
-		assert.equal(rs.raw(""), "buffer");
-		assert.equal(rs.raw(".css"), "buffer");
-		assert.equal(rs.raw(".png"), "buffer");
+		assert.equal(rs.raw(F).type, "buffer");
+		assert.equal(rs.raw(F + ".css").type, "buffer");
+		assert.equal(rs.raw(F + ".png").type, "buffer");
 	});
 	
 	it("text", () => {
-		assert.equal(rs.text(""), "string");
-		assert.equal(rs.text(".css"), "string");
-		assert.equal(rs.text(".png"), "string");
+		assert.equal(rs.text(F).type, "string");
+		assert.equal(rs.text(F + ".css").type, "string");
+		assert.equal(rs.text(F + ".png").type, "string");
+	});
+	
+	it("cmd", () => {
+		const {content} = rs.cmd('node -e "console.log(1 + 1)"');
+		assert.equal(content.toString(), "2\n");
 	});
 });
