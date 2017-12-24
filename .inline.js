@@ -1,10 +1,12 @@
-function readFile(from, resource, isBinary) {
+const IS_FILE = new Set(["file", "text", "raw"]);
+
+function readFile(
+	from, resource,
+	isBinary = require('is-binary-path')(resource.args)
+) {
 	var path = require("pathlib"),
 		fs = require("fs"),
-		src = ".";
-	if (from) {
-		src = path(from.args).dir();
-	}
+		src = getDir(from) || ".";
 	resource.args = path(src).resolve(resource.args).path;
 	if (isBinary) {
 		return fs.readFileSync(resource.args);
@@ -12,12 +14,23 @@ function readFile(from, resource, isBinary) {
 	return fs.readFileSync(resource.args, "utf8");
 }
 
+function readCmd(from, resource) {
+	const cwd = getDir(from) || ".";
+	const {execSync} = require("child_process");
+	return execSync(resource.args, {cwd});
+}
+
+function getDir(resource) {
+	if (resource && IS_FILE.has(resource.name)) {
+		return require("path").dirname(resource.args);
+	}
+}
+
 module.exports = {
 	resources: [{
 		name: "file",
 		read({from, resource}) {
-			return readFile(
-				from, resource, require('is-binary-path')(resource.args));
+			return readFile(from, resource);
 		}
 	}, {
 		name: "raw",
@@ -32,10 +45,7 @@ module.exports = {
 	}, {
 		name: "cmd",
 		read({from, resource}) {
-			const path = require("pathlib");
-			const cwd = from ? path(from.args).dir().path : ".";
-			const {execSync} = require("child_process");
-			return execSync(resource.args, {cwd});
+			return readCmd(from, resource);
 		}
 	}],
 	transforms: [{
