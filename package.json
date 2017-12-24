@@ -5,7 +5,8 @@
   "author": "eight04 <eight04@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "test": "eslint **/*.js && mocha",
+    "lint": "eslint **/*.js --ignore-pattern !.inline.js --cache",
+    "test": "npm run lint && mocha",
     "preversion": "npm test",
     "version": "npm run build && git add .",
     "postversion": "git push --follow-tags && npm publish",
