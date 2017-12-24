@@ -31,80 +31,128 @@ Hello world!
 
 Syntax
 ------
-### Inline a file
-The `$inline()` statement will be replaced with the content of the file.
+
+An $inline directive is composed by:
+
+1. A `$inline` function.
+2. A resource definition which includes a resource and optional transformers.
+
+`$inline` function
+------------------
+
+1. Replace the directive with the content:
+
+	* `$inline(resource)`: The `$inline()` function will be replaced with the content of the file.
+	
+		```js
+		const a = "$inline(resource)";
+		```
+		->
+		```js
+		const a = "the content of the resource";
+		```
+	
+	* `$inline.line(resource)`: Entire line will be replaced.
+
+		```js
+		/* $inline.line(resource) */
+		```
+		->
+		```
+		the content of the resource
+		```
+	
+2. Replace the text wrapped by a pair of directives.
+
+	* `$inline.start(resource)` and `$inline.end`: Mark multiple lines which would be replaced by the content.
+	
+		```js
+		/* $inline.start(resource) */
+		Multiple
+		lines
+		/* $inline.end */
+		```
+		->
+		```js
+		/* $inline.start(resource) */
+		the content of the resource
+		/* $inline.end */
+		```
+		
+	* `$inline.open(resource, skipChars)` and `$inline.close(skipChars)`: Replace the text between two functions. `skipChars` is a number which indicates how many characters should be skipped.
+	
+		```html
+		<!--$inline.open(resource, 3)-->Some text<!--$inline.close(4)-->
+		```
+		->
+		```html
+		<!--$inline.open(resource, 3)-->the content of the resource<!--$inline.close(4)-->
+		```
+		
+3. Define shortcuts.
+
+	Shortcut is composed by a name and a expanding pattern. You can use `$1`, `$2`, ...`$9`, or `$&` to referece the parameters.
+
+	```js
+	// $inline.shortcut("pkg", "../package.json|parse:$1")
+	var version = $inline("pkg:version"),
+		author = $inline("pkg:author");
+	```
+	would be expanded to
+	```js
+	var version = $inline("../package.json|parse:version"),
+		author = $inline("../package.json|parse:author");
+	```
+	
+4. Ignore `$inline` directives.
+
+	Sometimes we want to disable inline-js on some directives, we can wrap the content in `$inline.skipStart` and `$inline.skipEnd`.
+
+	```
+	$inline('path/to/file')
+	// $inline.skipStart
+	$inline('path/to/file') // won't be processed
+	// $inline.skipeEnd
+	$inline('path/to/file')
+	```
+	
+Resource
+--------
+
+Resource is a JavaScript string so some characters (`'`, `"`) needs to be escaped. It uses [pipe expression](https://www.npmjs.com/package/haye#pipe-expression). If written in regular expression:
+
+```
+(resourceType:)? resourceParam (| transform (: param (,param)* )? )*
+```
+
+If `resourceType` is missing, it defaults to `file`.
+
+Some examples:
+
 ```
 $inline("path/to/file")
-```
-### Use the transformer
-```
 $inline("path/to/file|transform1|transform2")
-```
-### Pass arguments to the transformer
-```
-$inline("path/to/file|transform1:arg|transform2:arg1,arg2")
-```
-### Replace current line
-Entire line will be replaced.
-```
-// this line will be replaced $inline.line("path/to/file") with the content of the file
-```
-### Use .start and .end
-The lines between .start and .end will be replaced.
-```
-// $inline.start("path/to/file") This line preserve
-These lines
-will
-be
-replaced
-// $inline.end but not this line
-```
-### Use .skipStart and .skipEnd
-Skip the content beween .skipStart and .skipEnd.
-```
-// $inline.skipStart
-$inline('path/to/file') this line won't be inlined
-// $inline.skipeEnd
-```
-### Use .open and .close
-The content between .open and .close will be replaced. The additional argument is how many characters to skip.
-```
-<!--$inline.open("path/to/file", 3)-->Replace me<!--$inline.close(4)-->
-```
-### Use .shortcut
-Use .shortcut to deal with repeated patterns. Shortcut is composed by a name and a expanding pattern. You can use $1...$9 to referece the params.
-```
-// $inline.shortcut("pkg", "../package.json|parse:$1")
-var version = $inline("pkg:version"),
-	author = $inline("pkg:author");
+$inline("path/to/file|transform1:param1,param2|transform2")
 ```
 
-Working with binary
--------------------
+Different resource type
+-----------------------
 
-There are some transformers behave differently according to the type of content which is string or Buffer, e.g. `dataurl` transformer.
+inline-js can read content from different resources, which result in different type of the content (`string` or `Buffer`). The type of the content may also affect how transformers work (e.g. `dataurl` transformer).
 
-By the default, inline-js would determine the file type according to its extension:
+* `file`: Default type. It reads the content from a file path, which may be relative with the source file.
 
-```
-// string
-$inline("file.txt")
+	The result could be a utf8 string or a `Buffer`, depending on the extension of the file, using [is-binary-path](https://www.npmjs.com/package/is-binary-path).
+	
+* `text`: Like `file`, but the result is always a utf8 string.
+* `raw`: Like `file`, but the result is always a `Buffer`.
+* `cmd`: Execute a command and read the stdout as a `Buffer`.
 
-// buffer
-$inline("file.png")
-```
-
-> Note: a text file would be read as utf8 string
-
-You can explicitly specify the file type:
-
-```
-// string
-$inline("text:myfile")
-
-// buffer
-$inline("raw:myfile")
-```
+	```
+	Current date: $inline("cmd:date /t")
+	```
+	
+Resources would be cached after loaded, so inline same file/command multiple times would only execute once.
 
 CLI
 ----
@@ -185,7 +233,7 @@ var version = $inline("./package.json|parse:version"),
 ```
 
 ### stringify
-`JSON.stringify` the content. Useful to include text content into .js:
+`JSON.stringify` the content. Useful to include text content into JavaScript code:
 ```
 var myCssString = $inline("./style.css|cssmin|stringify");
 ```
@@ -195,7 +243,7 @@ var myCssString = $inline("./style.css|cssmin|stringify");
 
 Use `.inline.js`
 ----------------
-You can create your transformer and shortcut with this file.
+You can add your resource, transformer, and shortcut with this file.
 
 Create a `.inline.js` file in your package root:
 ```
