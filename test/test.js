@@ -156,6 +156,13 @@ describe("transforms", () => {
 	var tr = {};
 	conf.transforms.forEach(tf => tr[tf.name] = tf.transform);
 	
+	it("cssmin", () => {
+		assert.equal(
+			tr.cssmin(null, 'body {\n  color: #000000;\n}\n'),
+			"body{color:#000}"
+		);
+	});
+	
 	it("eval", () => {
 		assert.equal(
 			tr.eval(null, '{"hello": 123}', "JSON.parse($0).hello"),
