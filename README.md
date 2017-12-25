@@ -64,7 +64,7 @@ An $inline directive is composed by:
 	
 2. Replace the text wrapped by a pair of directives.
 
-	* `$inline.start(resource)` and `$inline.end`: Mark multiple lines which would be replaced by the content.
+	* `$inline.start(resource)` and `$inline.end`: Mark multiple lines which would be replaced by the content. *There must be at leat one line between two directives, or there is no space to insert the content.*
 	
 		```js
 		/* $inline.start(resource) */
@@ -269,6 +269,15 @@ module.exports = {
 
 Changelog
 ---------
+
+* 0.6.0 (Dec 25, 2017)
+
+  - Completely rewritten in async manner.
+  - **Change: the first argument of the transformer is changed to a resource object.**
+  - **Change: resources are read in parallel.**
+  - Add: `resources` in `.inline.js`.
+  - Add: `cmd` resource.
+  - Add: `transformer.transform` and `resource.read` may return a promise.
 
 * 0.5.0 (Sep 26, 2017)
 

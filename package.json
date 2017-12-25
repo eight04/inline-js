@@ -18,9 +18,10 @@
   },
   "main": "index.js",
   "dependencies": {
+    "asyncro": "^2.0.1",
     "clean-css": "^4.1.9",
     "fs-extra": "^5.0.0",
-    "haye": "^1.0.1",
+    "haye": "^2.0.1",
     "is-binary-path": "^2.0.0",
     "js-tokens": "^3.0.1",
     "mime": "^2.1.0",

@@ -131,7 +131,7 @@ describe("inline", () => {
 		};
 		var transformer = {
 			transform({resource, transforms = [], content}) {
-				assert.equal(resource.args, "../package.json");
+				assert.deepEqual(resource.args, ["../package.json"]);
 				assert.deepEqual(transforms, [{
 					name: "parse",
 					args: "test"
