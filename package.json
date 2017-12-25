@@ -7,6 +7,7 @@
   "scripts": {
     "lint": "eslint **/*.js --ignore-pattern !.inline.js --cache",
     "mocha": "mocha --require intelli-espower-loader",
+    "mocha-debug": "mocha --require intelli-espower-loader --reporter spec --inspect-brk",
     "test": "npm run lint && npm run mocha",
     "preversion": "npm test",
     "version": "npm run build && git add .",
