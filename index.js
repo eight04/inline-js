@@ -9,17 +9,14 @@ const {parseText, parsePipes} = require("./lib/parser");
 const conf = require("./lib/conf");
 const logger = require("./lib/logger");
 
-function resourceToString(source) {
-  return `${source.name}:${source.args.join(",")}`;
-}
-
 // async
-function inline({source, target, depth = 0, maxDepth = 10, dependency = {}, transforms = []}) {
+function inline({source, target, depth = 0, maxDepth = 10, transforms = [], dependency = {}}) {
 	if (depth > maxDepth) {
 		throw new Error(`Max recursion depth ${maxDepth} exceeded, if you are not making an infinite loop please increase --max-depth limit`);
 	}
   
   resource.resolve(source, target);
+  dependency = dependency[resource.toHash(target)] = {};
   
 	return resource.read(source, target)
 		.then(content => {
@@ -48,14 +45,12 @@ function inline({source, target, depth = 0, maxDepth = 10, dependency = {}, tran
           name: pipes[0].args.length ? pipes[0].name : "file",
           args: pipes[0].args.length ? pipes[0].args : [pipes[0].name]
         };
-        const targetHash = resourceToString(inlineTarget);
-        const inlineDependency = dependency[targetHash] = {};
         return inline({
           source: target,
           target: inlineTarget,
           depth: depth + 1,
           maxDepth,
-          dependency: inlineDependency,
+          dependency,
           transforms: pipes.slice(1)
         });
       })
@@ -97,8 +92,8 @@ function init({
   
   return inline({target, maxDepth, dependency}).then(content => {
     logger.log(`Result inline tree:`);
-    logger.log(file);
-    logger.log(treeify.asTree(dependency));
+    logger.log(resource.toHash(target));
+    logger.log(treeify.asTree(Object.values(dependency)[0]));
     
     if (dry) {
       logger.log(`[dry] Output to ${out || "stdout"}`);
