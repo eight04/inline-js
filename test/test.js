@@ -9,6 +9,21 @@ describe("parsePipes", () => {
     const result = parsePipes("test:123");
     assert.deepEqual(result, [{name: "test", args: ["123"]}]);
   });
+  
+  it("no value", () => {
+    const result = parsePipes("a");
+    assert.deepEqual(result, [{name: "a", args: []}]);
+  });
+  
+  it("multiple values", () => {
+    const result = parsePipes("a:b,c");
+    assert.deepEqual(result, [{name: "a", args: ["b", "c"]}]);
+  });
+  
+  it("escape characters", () => {
+    const result = parsePipes("a\\:b:a\\,b");
+    assert.deepEqual(result, [{name: "a:b", args: ["a,b"]}]);
+  });
 });
 
 describe("parseDirective", () => {
@@ -266,8 +281,8 @@ describe("resource center", () => {
     const test = prepare({
       name: "cmd",
       args: ['node -e "console.log(1 + 1)"'],
-      expectType: "buffer",
-      expect: Buffer.from("2\n")
+      expectType: "string",
+      expect: "2\n"
     });
 		return test();
 	});
