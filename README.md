@@ -116,7 +116,7 @@ An $inline directive is composed by:
 	$inline('path/to/file') // OK
 	```
   
-  Additional identifier is required if the content contains `$inline.skipEnd` as well.
+  Additional identifier is required if the content contains `$inline.skipEnd`.
   
   ```
   $inline.skipStart("skipThisSection")
