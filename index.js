@@ -12,7 +12,7 @@ const logger = require("./lib/logger");
 // async
 function inline({source, target, depth = 0, maxDepth = 10, transforms = [], dependency = {}}) {
 	if (depth > maxDepth) {
-		throw new Error(`Max recursion depth ${maxDepth} exceeded, if you are not making an infinite loop please increase --max-depth limit`);
+		throw new Error(`Max recursion depth ${maxDepth} exceeded. If you are not making an infinite loop, try to increase --max-depth limit.`);
 	}
   
   resource.resolve(source, target);
