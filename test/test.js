@@ -292,12 +292,19 @@ describe("resource center", () => {
 	});
 	
 	it("cmd", () => {
-    const test = prepare({
-      name: "cmd",
-      args: ['node -e "console.log(1 + 1)"'],
-      expectType: "string",
-      expect: "2\n"
-    });
-		return test();
+    const command = 'node -e "console.log(1 + 1)"';
+    const test = prepare({name: "cmd"});
+		return Promise.all([
+      test({
+        args: [command],
+        expectType: "string",
+        expect: "2\n"
+      }),
+      test({
+        args: [command, "buffer"],
+        expectType: "buffer",
+        expect: Buffer.from("2\n")
+      })
+    ]);
 	});
 });
