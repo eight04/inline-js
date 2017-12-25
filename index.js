@@ -19,6 +19,8 @@ function inline({source, target, depth = 0, maxDepth = 10, dependency = {}, tran
 		throw new Error(`Max recursion depth ${maxDepth} exceeded, if you are not making an infinite loop please increase --max-depth limit`);
 	}
   
+  resource.resolve(source, target);
+  
 	return resource.read(source, target)
 		.then(content => {
 			if (typeof content !== 'string') {

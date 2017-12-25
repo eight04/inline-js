@@ -6,7 +6,8 @@
   "license": "MIT",
   "scripts": {
     "lint": "eslint **/*.js --ignore-pattern !.inline.js --cache",
-    "test": "npm run lint && mocha",
+    "mocha": "mocha --require intelli-espower-loader",
+    "test": "npm run lint && npm run mocha",
     "preversion": "npm test",
     "version": "npm run build && git add .",
     "postversion": "git push --follow-tags && npm publish",
@@ -21,19 +22,17 @@
     "asyncro": "^2.0.1",
     "clean-css": "^4.1.9",
     "fs-extra": "^5.0.0",
-    "haye": "^2.0.1",
     "is-binary-path": "^2.0.0",
     "js-tokens": "^3.0.1",
     "mime": "^2.1.0",
     "neodoc": "^1.4.0",
-    "pathlib": "^0.1.2",
     "treeify": "^1.0.1"
   },
   "devDependencies": {
-    "chai": "^4.1.2",
-    "chai-subset": "^1.6.0",
     "crlf": "^1.1.1",
+    "intelli-espower-loader": "^1.0.1",
     "mocha": "^4.0.1",
+    "power-assert": "^1.4.4",
     "proxyquire": "^1.8.0",
     "sinon": "^4.1.3"
   },
