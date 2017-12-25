@@ -125,7 +125,8 @@ Resource is a JavaScript string so some characters (`'`, `"`) needs to be escape
 (resourceType:)? resourceParam (| transform (: param (,param)* )? )*
 ```
 
-If `resourceType` is missing, it defaults to `file`.
+* If `resourceType` is missing, it defaults to `file`.
+* Reserved keywords (`,` and `|`) in params need to be escaped with `\`.
 
 Some examples:
 
@@ -146,13 +147,43 @@ inline-js can read content from different resources, which result in different t
 	
 * `text`: Like `file`, but the result is always a utf8 string.
 * `raw`: Like `file`, but the result is always a `Buffer`.
-* `cmd`: Execute a command and read the stdout as a `Buffer`.
+* `cmd`: Execute a command and read the stdout as a utf8 string. You may pass the second argument which represent the encoding (default: `utf8`). Passing `buffer` to use raw `Buffer` object without encoding the result into string.
 
 	```
 	Current date: $inline("cmd:date /t")
 	```
 	
-Resources would be cached after loaded, so inline same file/command multiple times would only execute once.
+File-like resources would be cached after loaded, so inlining the same file multiple times would only read once.
+
+Command resources are also cached, but it depends on cwd. For example:
+
+* The command `cat some-file` is executed once, with `cwd = "."`.
+
+  ```
+  // entry.txt
+  $inline("a.txt")
+  $inline("b.txt")
+  
+  // a.txt
+  $inline("cmd:cat some-file")
+
+  // b.txt
+  $inline("cmd:cat some-file")
+  ```
+  
+* The command is executed twice. One with `cwd = "."` and another with `cwd = "./dir"`.
+
+  ```
+  // entry.txt
+  $inline("a.txt")
+  $inline("dir/b.txt")
+  
+  // a.txt
+  $inline("cmd:cat some-file")
+
+  // dir/b.txt
+  $inline("cmd:cat some-file")
+  ```
 
 CLI
 ----

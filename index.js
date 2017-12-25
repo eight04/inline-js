@@ -16,7 +16,7 @@ function inline({source, target, depth = 0, maxDepth = 10, transforms = [], depe
 	}
   
   resource.resolve(source, target);
-  dependency = dependency[resource.toHash(target)] = {};
+  dependency = dependency[target.args[0]] = {};
   
 	return resource.read(source, target)
 		.then(content => {
@@ -92,7 +92,7 @@ function init({
   
   return inline({target, maxDepth, dependency}).then(content => {
     logger.log(`Result inline tree:`);
-    logger.log(resource.toHash(target));
+    logger.log(Object.keys(dependency)[0]);
     logger.log(treeify.asTree(Object.values(dependency)[0]));
     
     if (dry) {
