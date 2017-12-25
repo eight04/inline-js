@@ -35,7 +35,7 @@ describe("parseDirective", () => {
 	});
 });
 
-describe("createShortcuts", () => {
+describe("shortcut", () => {
   const {parsePipes} = require("../lib/parser");
   
   function prepare(name, expand) {
@@ -67,6 +67,11 @@ describe("createShortcuts", () => {
 		const expand = prepare("test", "a.txt|tr");
 		assert(expand("test|tr2|tr3") === "a.txt|tr|tr2|tr3");
 	});
+  
+  it("use function", () => {
+    const expand = prepare("test", (source, a, b) => `a.txt|${a}|${b}`);
+    assert(expand("test:123,456") === "a.txt|123|456");
+  });
 });
 
 describe("parseText", () => {
@@ -235,7 +240,7 @@ describe("transforms", () => {
   });
 });
 
-describe("resource center", () => {
+describe("resource", () => {
   const resource = require("../lib/resource");
   
   function prepare(baseOptions) {
