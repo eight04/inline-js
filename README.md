@@ -12,7 +12,7 @@ npm install -g inline-js
 Quick start
 -----------
 You have two files, `a.txt` and `b.txt`.
-<!-- $inline.skipStart -->
+<!-- $inline.skipStart("toUsage") -->
 ```
 // a.txt
 $inline("./b.txt");
@@ -109,12 +109,22 @@ An $inline directive is composed by:
 	Sometimes we want to disable inline-js on some directives, we can wrap the content in `$inline.skipStart` and `$inline.skipEnd`.
 
 	```
-	$inline('path/to/file')
-	// $inline.skipStart
+	$inline('path/to/file') // OK
+	$inline.skipStart
 	$inline('path/to/file') // won't be processed
-	// $inline.skipeEnd
-	$inline('path/to/file')
+	$inline.skipEnd
+	$inline('path/to/file') // OK
 	```
+  
+  Additional identifier is required if the content contains `$inline.skipEnd` as well.
+  
+  ```
+  $inline.skipStart("skipThisSection")
+  $inline.skipEnd
+  $inline('path/to/file') // won't be processed
+  $inline.skipEnd("skipThisSection")
+  ```
+  
 	
 Resource
 --------
@@ -187,7 +197,7 @@ Command resources are also cached, but it depends on cwd. For example:
 
 CLI
 ----
-<!-- $inline.skipEnd -->
+<!-- $inline.skipEnd("toUsage") -->
 <!-- $inline.start("./cli.js|docstring|markdown:codeblock") -->
 ```
 inlinejs
@@ -203,7 +213,7 @@ Options:
   -v --version          Show version.
 ```
 <!-- $inline.end -->
-<!-- $inline.skipStart -->
+<!-- $inline.skipStart("toEnd") -->
 
 Builtin transformers
 --------------------
