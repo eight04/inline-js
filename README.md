@@ -153,7 +153,7 @@ inline-js can read content from different resources, which result in different t
 	Current date: $inline("cmd:date /t")
 	```
 	
-File-like resources would be cached after loaded, so inlining the same file multiple times would only read once.
+File-like resources would be cached after loaded, so inlining the same file in the same resource type multiple times would only read once.
 
 Command resources are also cached, but it depends on cwd. For example:
 
@@ -171,7 +171,7 @@ Command resources are also cached, but it depends on cwd. For example:
   $inline("cmd:cat some-file")
   ```
   
-* The command is executed twice. One with `cwd = "."` and another with `cwd = "./dir"`.
+* The command is executed twice. The first with `cwd = "."` and the second with `cwd = "./dir"`.
 
   ```
   // entry.txt
@@ -232,7 +232,7 @@ $inline("somefile.txt|dataurl:text/css,utf8")
 ```
 
 ### docstring
-Extract docstring (i.e. the first template literal) from the js file.
+Extract docstring (i.e. the first template literal) from the content.
 
 ### eval
 Eval JavaScript expression. You can access the content with `$0`.
@@ -262,6 +262,10 @@ some text
 var version = $inline("./package.json|parse:version"),
 	nestedProp = $inline("./package.json|parse:nested,prop");
 ```
+
+### string
+
+If the content is a buffer, convert it into a utf8 string. Otherwise do nothing.
 
 ### stringify
 `JSON.stringify` the content. Useful to include text content into JavaScript code:
