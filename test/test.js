@@ -219,6 +219,20 @@ describe("transforms", () => {
       })
     ]);
 	});
+  
+  it("handle promise", () => {
+    transformer.add({
+      name: "testPromise",
+      transform() {
+        return new Promise(resolve => {
+          setTimeout(() => resolve("OK"), 100);
+        });
+      }
+    });
+    
+    const test = prepare({name: "testPromise", expect: "OK"});
+    return test();
+  });
 });
 
 describe("resource center", () => {
