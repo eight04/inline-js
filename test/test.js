@@ -308,3 +308,56 @@ describe("resource center", () => {
     ]);
 	});
 });
+
+describe("conf", () => {
+  function test(file, expectConfigured) {
+    const require = proxyquire.noPreserveCache();
+    const stubs = {};
+    
+    const mods = ["shortcut", "resource", "transformer"].reduce(
+      (output, name) => {
+        const mod = require(`../lib/${name}`, {});
+        output[name] = stubs[`./${name}`] = mod;
+        return output;
+      },
+      {}
+    );
+    
+    const conf = require("../lib/conf", stubs);
+    
+    conf.findAndLoad(file);
+    
+    assert(mods.shortcut.has(null, "shortcutConfigured") === expectConfigured);
+    assert(mods.resource.has("resourceConfigured") === expectConfigured);
+    assert(mods.transformer.has("transformConfigured") === expectConfigured);
+    
+    if (expectConfigured) {
+      return Promise.all([
+        Promise.resolve(mods.shortcut.expand(null, [{name: "shortcutConfigured", args: []}]))
+          .then(result => {
+            assert(result === "shortcutOK");
+          }),
+        mods.resource.read(null, {name: "resourceConfigured", args: []})
+          .then(content => {
+            assert(content === "resourceOK");
+          }),
+        mods.transformer.transform(null, "", [{name: "transformConfigured", args: []}])
+          .then(content => {
+            assert(content === "transformOK");
+          })
+      ]);
+    }
+  }
+  
+  it("find in current path", () => {
+    return test(`${__dirname}/conf/test`, true);
+  });
+  
+  it("find in ancestor", () => {
+    return test(`${__dirname}/conf/b/test`, true);
+  });
+  
+  it("don't go up through package root", () => {
+    return test(`${__dirname}/conf/a/test`, false);
+  });
+});

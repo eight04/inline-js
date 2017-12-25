@@ -310,6 +310,7 @@ Changelog
   - Completely rewritten in async manner.
   - **Change: the first argument of the transformer is changed to a resource object.**
   - **Change: resources are read in parallel.**
+  - **Change: resources are now cached after loaded.**
   - Add: `resources` in `.inline.js`.
   - Add: `cmd` resource.
   - Add: `transformer.transform` and `resource.read` may return a promise.
