@@ -141,23 +141,23 @@ Different resource type
 
 inline-js can read content from different resources, which result in different type of the content (`string` or `Buffer`). The type of the content may also affect how transformers work (e.g. `dataurl` transformer).
 
-* `file`: Default type. It reads the content from a file path, which may be relative with the source file.
+* `file`: Default type. It reads the content from a file path, which may be relative to the file which requires the resource.
 
-	The result could be a utf8 string or a `Buffer`, depending on the extension of the file, using [is-binary-path](https://www.npmjs.com/package/is-binary-path).
+	The result could be a utf8 string or a `Buffer`, depending on the extension of the file. (See [is-binary-path](https://www.npmjs.com/package/is-binary-path))
 	
 * `text`: Like `file`, but the result is always a utf8 string.
 * `raw`: Like `file`, but the result is always a `Buffer`.
-* `cmd`: Execute a command and read the stdout as a utf8 string. You may pass the second argument which represent the encoding (default: `utf8`). Passing `buffer` to use raw `Buffer` object without encoding the result into string.
+* `cmd`: Execute a command and read the stdout as a utf8 string. You may pass the second argument which represent the encoding (default: `utf8`). Passing `buffer` to get raw `Buffer` object.
 
 	```
 	Current date: $inline("cmd:date /t")
 	```
 	
-File-like resources would be cached after loaded, so inlining the same file in the same resource type multiple times would only read once.
+File-like resources would be cached after loaded, so inlining the same file with the same resource type multiple times would only read once.
 
 Command resources are also cached, but it depends on cwd. For example:
 
-* The command `cat some-file` is executed once, with `cwd = "."`.
+* The command `cat myfile` is executed once, with `cwd = "."`.
 
   ```
   // entry.txt
@@ -165,10 +165,10 @@ Command resources are also cached, but it depends on cwd. For example:
   $inline("b.txt")
   
   // a.txt
-  $inline("cmd:cat some-file")
+  $inline("cmd:cat myfile")
 
   // b.txt
-  $inline("cmd:cat some-file")
+  $inline("cmd:cat myfile")
   ```
   
 * The command is executed twice. The first with `cwd = "."` and the second with `cwd = "./dir"`.
@@ -179,10 +179,10 @@ Command resources are also cached, but it depends on cwd. For example:
   $inline("dir/b.txt")
   
   // a.txt
-  $inline("cmd:cat some-file")
+  $inline("cmd:cat myfile")
 
   // dir/b.txt
-  $inline("cmd:cat some-file")
+  $inline("cmd:cat myfile")
   ```
 
 CLI
@@ -212,7 +212,7 @@ Builtin transformers
 Minify css content.
 
 ### dataurl
-Convert the content into dataurl.
+Convert the content into data URL.
 
 The transformer would determine the mimetype from filename:
 ```
@@ -258,9 +258,9 @@ some text
 
 ### parse
 `JSON.parse` the content. You can access property by specify property name.
-```
+```js
 var version = $inline("./package.json|parse:version"),
-	nestedProp = $inline("./package.json|parse:nested,prop");
+  nestedProp = $inline("./package.json|parse:nested,prop");
 ```
 
 ### string
@@ -274,33 +274,43 @@ var myCssString = $inline("./style.css|cssmin|stringify");
 ```
 
 ### trim
-`String.trim` the content.
+`String.prototype.trim` the content.
 
 Use `.inline.js`
 ----------------
 You can add your resource, transformer, and shortcut with this file.
 
 Create a `.inline.js` file in your package root:
+
 ```
 module.exports = {
-	shortcuts: [{
-		name: "myshortcut",
-		expand: "pattern-to-expand",
-		// or use a function
-		expand: function (file, arg1, arg2, ...args) {
-			// create expand pattern
-			return pattern;
-		}
-	}, ...],
-	transforms: [{
-		name: "mytransform",
-		transform: function (file, content, arg1, arg2, ...args) {
-			// do something to the content
-			return content;
-		}
-	}, ...]
+  resources: [{
+    name: "myresource",
+    read: function (source, target) {
+      // fetch the resource
+      return fetchResource(target.args[0]);
+    }
+  }, ...],
+  shortcuts: [{
+    name: "myshortcut",
+    expand: "pattern-to-expand",
+    // or use a function
+    expand: function (resource, arg1, arg2, ...args) {
+      // create expand pattern
+      return pattern;
+    }
+  }, ...],
+  transforms: [{
+    name: "mytransform",
+    transform: function (resource, content, arg1, arg2, ...args) {
+      // do something to the content
+      return content;
+    }
+  }, ...]
 };
 ```
+
+`resource.read` and `transformer.transform` may return a promise.
 
 Changelog
 ---------
