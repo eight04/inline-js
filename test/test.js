@@ -1,6 +1,5 @@
 /* eslint-env mocha */
 const assert = require("power-assert");
-const proxyquire = require("proxyquire");
 
 describe("parsePipes", () => {
   const {parsePipes} = require("../lib/parser");
@@ -40,7 +39,8 @@ describe("createShortcuts", () => {
   const {parsePipes} = require("../lib/parser");
   
   function prepare(name, expand) {
-    const shortcut = proxyquire.noPreserveCache()("../lib/shortcut", {});
+    delete require.cache[require.resolve("../lib/shortcut")];
+    const shortcut = require("../lib/shortcut");
     shortcut.addGlobal({name, expand});
     return exp => {
       const pipes = parsePipes(exp);
@@ -310,38 +310,33 @@ describe("resource center", () => {
 });
 
 describe("conf", () => {
+  const MODS = ["shortcut", "resource", "transformer", "conf"];
+  
   function test(file, expectConfigured) {
-    const require = proxyquire.noPreserveCache();
-    const stubs = {};
-    
-    const mods = ["shortcut", "resource", "transformer"].reduce(
-      (output, name) => {
-        const mod = require(`../lib/${name}`, {});
-        output[name] = stubs[`./${name}`] = mod;
-        return output;
-      },
-      {}
-    );
-    
-    const conf = require("../lib/conf", stubs);
+    MODS.forEach(name => {
+      delete require.cache[require.resolve(`../lib/${name}`)];
+    });
+    const [shortcut, resource, transformer, conf] = MODS.map(name => {
+      return require(`../lib/${name}`);
+    });
     
     conf.findAndLoad(file);
     
-    assert(mods.shortcut.has(null, "shortcutConfigured") === expectConfigured);
-    assert(mods.resource.has("resourceConfigured") === expectConfigured);
-    assert(mods.transformer.has("transformConfigured") === expectConfigured);
+    assert(shortcut.has(null, "shortcutConfigured") === expectConfigured);
+    assert(resource.has("resourceConfigured") === expectConfigured);
+    assert(transformer.has("transformConfigured") === expectConfigured);
     
     if (expectConfigured) {
       return Promise.all([
-        Promise.resolve(mods.shortcut.expand(null, [{name: "shortcutConfigured", args: []}]))
+        Promise.resolve(shortcut.expand(null, [{name: "shortcutConfigured", args: []}]))
           .then(result => {
             assert(result === "shortcutOK");
           }),
-        mods.resource.read(null, {name: "resourceConfigured", args: []})
+        resource.read(null, {name: "resourceConfigured", args: []})
           .then(content => {
             assert(content === "resourceOK");
           }),
-        mods.transformer.transform(null, "", [{name: "transformConfigured", args: []}])
+        transformer.transform(null, "", [{name: "transformConfigured", args: []}])
           .then(content => {
             assert(content === "transformOK");
           })
