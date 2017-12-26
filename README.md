@@ -76,7 +76,7 @@ An $inline directive is composed by:
   /* $inline.end */
   ```
   Which would be converted to:
-  ```
+  ```js
   /* $inline.start(resource) */
   the content of the resource
   /* $inline.end */
@@ -302,7 +302,7 @@ module.exports = {
   resources: [{
     name: "myresource",
     read: function (source, target) {
-      // fetch the resource
+      // fetch the source
       return fetchResource(target.args[0]);
     }
   }, ...],
@@ -310,14 +310,14 @@ module.exports = {
     name: "myshortcut",
     expand: "pattern-to-expand",
     // or use a function
-    expand: function (resource, arg1, arg2, ...args) {
+    expand: function (target, arg1, arg2, ...) {
       // create expand pattern
       return pattern;
     }
   }, ...],
   transforms: [{
     name: "mytransform",
-    transform: function (resource, content, arg1, arg2, ...args) {
+    transform: function (target, content, arg1, arg2, ...) {
       // do something to the content
       return content;
     }
