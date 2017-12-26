@@ -5,10 +5,11 @@
   "author": "eight04 <eight04@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "lint": "eslint **/*.js --ignore-pattern !.inline.js --cache",
+    "lint": "eslint **/*.js --ignore-pattern !.inline.js --ignore-pattern coverage --cache",
     "mocha": "mocha --require intelli-espower-loader",
     "mocha-debug": "mocha --require intelli-espower-loader --reporter spec --inspect-brk",
-    "test": "npm run lint && npm run mocha",
+    "nyc": "nyc --reporter=html npm run mocha",
+    "test": "npm run lint && npm run nyc",
     "preversion": "npm test",
     "version": "npm run build && git add .",
     "postversion": "git push --follow-tags && npm publish",
@@ -33,6 +34,7 @@
     "crlf": "^1.1.1",
     "intelli-espower-loader": "^1.0.1",
     "mocha": "^4.0.1",
+    "nyc": "^11.4.1",
     "power-assert": "^1.4.4"
   },
   "repository": "eight04/inline-js"
