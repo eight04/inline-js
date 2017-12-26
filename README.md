@@ -16,7 +16,7 @@ Quick start
 -----------
 You have two files, `a.txt` and `b.txt`.
 <!-- $inline.skipStart("toUsage") -->
-```
+```js
 // a.txt
 $inline("./b.txt");
 
@@ -43,92 +43,92 @@ An $inline directive is composed by:
 `$inline` function
 ------------------
 
-1. Replace the directive with the content:
+### Replace the directive with the content
 
-	* `$inline(resource)`: The `$inline()` function will be replaced with the content of the file.
-	
-		```js
-		const a = "$inline(resource)";
-		```
-		->
-		```js
-		const a = "the content of the resource";
-		```
-	
-	* `$inline.line(resource)`: Entire line will be replaced.
+* `$inline(resource)`: The `$inline()` function will be replaced with the content of the file.
 
-		```js
-		/* $inline.line(resource) */
-		```
-		->
-		```
-		the content of the resource
-		```
-	
-2. Replace the text wrapped by a pair of directives.
-
-	* `$inline.start(resource)` and `$inline.end`: Mark multiple lines which would be replaced by the content. *There must be at leat one line between two directives, or there is no space to insert the content.*
-	
-		```js
-		/* $inline.start(resource) */
-		Multiple
-		lines
-		/* $inline.end */
-		```
-		->
-		```js
-		/* $inline.start(resource) */
-		the content of the resource
-		/* $inline.end */
-		```
-		
-	* `$inline.open(resource, skipChars)` and `$inline.close(skipChars)`: Replace the text between two functions. `skipChars` is a number which indicates how many characters should be skipped.
-	
-		```html
-		<!--$inline.open(resource, 3)-->Some text<!--$inline.close(4)-->
-		```
-		->
-		```html
-		<!--$inline.open(resource, 3)-->the content of the resource<!--$inline.close(4)-->
-		```
-		
-3. Define shortcuts.
-
-	Shortcut is composed by a name and a expanding pattern. You can use `$1`, `$2`, ...`$9`, or `$&` to referece the parameters.
-
-	```js
-	// $inline.shortcut("pkg", "../package.json|parse:$1")
-	var version = $inline("pkg:version"),
-		author = $inline("pkg:author");
-	```
-	would be expanded to
-	```js
-	var version = $inline("../package.json|parse:version"),
-		author = $inline("../package.json|parse:author");
-	```
-	
-4. Ignore `$inline` directives.
-
-	Sometimes we want to disable inline-js on some directives, we can wrap the content in `$inline.skipStart` and `$inline.skipEnd`.
-
-	```
-	$inline('path/to/file') // OK
-	$inline.skipStart
-	$inline('path/to/file') // won't be processed
-	$inline.skipEnd
-	$inline('path/to/file') // OK
-	```
-  
-  Additional identifier is required if the content contains `$inline.skipEnd`.
-  
+  ```js
+  const a = "$inline(resource)";
   ```
-  $inline.skipStart("skipThisSection")
-  $inline.skipEnd
-  $inline('path/to/file') // won't be processed
-  $inline.skipEnd("skipThisSection")
+  Which would be converted to:
+  ```js
+  const a = "the content of the resource";
+  ```
+
+* `$inline.line(resource)`: Entire line will be replaced.
+
+  ```js
+  /* $inline.line(resource) */
+  ```
+  Which would be converted to:
+  ```js
+  the content of the resource
   ```
   
-	
+### Replace the text wrapped by a pair of directives
+
+* `$inline.start(resource)` and `$inline.end`: Mark multiple lines which would be replaced by the content. *There must be at leat one line between two directives, or there is no space to insert the content.*
+
+  ```js
+  /* $inline.start(resource) */
+  Multiple
+  lines
+  /* $inline.end */
+  ```
+  Which would be converted to:
+  ```
+  /* $inline.start(resource) */
+  the content of the resource
+  /* $inline.end */
+  ```
+  
+* `$inline.open(resource, skipChars)` and `$inline.close(skipChars)`: Replace the text between two functions. `skipChars` is a number which indicates how many characters should be skipped.
+
+  ```html
+  <!--$inline.open(resource, 3)-->Some text<!--$inline.close(4)-->
+  ```
+  Which would be converted to:
+  ```html
+  <!--$inline.open(resource, 3)-->the content of the resource<!--$inline.close(4)-->
+  ```
+    
+### Define shortcuts
+
+Shortcut is composed by a name and a expanding pattern. You can use `$1`, `$2`, ...`$9`, or `$&` to referece the parameters.
+
+```js
+// $inline.shortcut("pkg", "../package.json|parse:$1")
+var version = $inline("pkg:version"),
+  author = $inline("pkg:author");
+```
+Which would be processed as:
+```js
+// $inline.shortcut("pkg", "../package.json|parse:$1")
+var version = $inline("../package.json|parse:version"),
+  author = $inline("../package.json|parse:author");
+```
+  
+### Ignore `$inline` directives
+
+Sometimes we want to disable inline-js on some directives, we can wrap the content in `$inline.skipStart` and `$inline.skipEnd`.
+
+```js
+$inline('path/to/file') // OK
+$inline.skipStart
+$inline('path/to/file') // won't be processed
+$inline.skipEnd
+$inline('path/to/file') // OK
+```
+
+Additional identifier is required if the content contains `$inline.skipEnd`.
+
+```js
+$inline.skipStart("skipThisSection")
+$inline.skipEnd // won't be processed
+$inline('path/to/file') // won't be processed
+$inline.skipEnd("skipThisSection")
+```
+
 Resource
 --------
 
@@ -138,12 +138,12 @@ Resource is a JavaScript string so some characters (`'`, `"`) needs to be escape
 (resourceType:)? resourceParam (| transform (: param (,param)* )? )*
 ```
 
-* If `resourceType` is missing, it defaults to `file`.
+* If `resourceType` is missing, it defaults to `"file"`.
 * Reserved keywords (`,` and `|`) in params need to be escaped with `\`.
 
-Some examples:
+Examples:
 
-```
+```js
 $inline("path/to/file")
 $inline("path/to/file|transform1|transform2")
 $inline("path/to/file|transform1:param1,param2|transform2")
@@ -156,23 +156,23 @@ inline-js can read content from different resources, which result in different t
 
 * `file`: Default type. It reads the content from a file path, which may be relative to the file which requires the resource.
 
-	The result could be a utf8 string or a `Buffer`, depending on the extension of the file. (See [is-binary-path](https://www.npmjs.com/package/is-binary-path))
-	
+  The result could be a utf8 string or a `Buffer`, depending on the extension of the file. (See [is-binary-path](https://www.npmjs.com/package/is-binary-path))
+  
 * `text`: Like `file`, but the result is always a utf8 string.
 * `raw`: Like `file`, but the result is always a `Buffer`.
-* `cmd`: Execute a command and read the stdout as a utf8 string. You may pass the second argument which represent the encoding (default: `utf8`). Passing `buffer` to get raw `Buffer` object.
+* `cmd`: Execute a command and read the stdout as a utf8 string. You may pass the second argument which represent the encoding (default: `"utf8"`). Passing `"buffer"` to get raw `Buffer` object.
 
-	```
-	Current date: $inline("cmd:date /t")
-	```
-	
+  ```js
+  Current date: $inline("cmd:date /t")
+  ```
+  
 File-like resources would be cached after loaded, so inlining the same file with the same resource type multiple times would only read once.
 
 Command resources are also cached, but it depends on cwd. For example:
 
 * The command `cat myfile` is executed once, with `cwd = "."`.
 
-  ```
+  ```js
   // entry.txt
   $inline("a.txt")
   $inline("b.txt")
@@ -186,7 +186,7 @@ Command resources are also cached, but it depends on cwd. For example:
   
 * The command is executed twice. The first with `cwd = "."` and the second with `cwd = "./dir"`.
 
-  ```
+  ```js
   // entry.txt
   $inline("a.txt")
   $inline("dir/b.txt")
@@ -228,7 +228,7 @@ Minify css content.
 Convert the content into data URL.
 
 The transformer would determine the mimetype from filename:
-```
+```js
 // data:text/css;charset=utf8;base64,...
 $inline("mystyle.css|dataurl")
 
@@ -236,11 +236,11 @@ $inline("mystyle.css|dataurl")
 $inline("myimage.png|dataurl")
 ```
 Or you can pass the mimetype manually:
-```
+```js
 $inline("somefile.txt|dataurl:text/css")
 ```
 Specify charset (default to `utf8` for text file):
-```
+```js
 $inline("somefile.txt|dataurl:text/css,utf8")
 ```
 
@@ -249,13 +249,14 @@ Extract docstring (i.e. the first template literal) from the content.
 
 ### eval
 Eval JavaScript expression. You can access the content with `$0`.
-```
+```js
 var version = $inline("./package.json|eval:JSON.parse($0).version|stringify");
 ```
 
 ### markdown
 Wrap content with markdown codeblock, code, or quote.
-<pre><code>// a.txt
+````js
+// a.txt
 some text
 
 // $inline("a.txt|markdown:codeblock")
@@ -267,7 +268,8 @@ some text
 `some text`
 
 // $inline("a.txt|markdown:quote")
-> sometext</code></pre>
+> sometext
+````
 
 ### parse
 `JSON.parse` the content. You can access property by specify property name.
@@ -282,7 +284,7 @@ If the content is a buffer, convert it into a utf8 string. Otherwise do nothing.
 
 ### stringify
 `JSON.stringify` the content. Useful to include text content into JavaScript code:
-```
+```js
 var myCssString = $inline("./style.css|cssmin|stringify");
 ```
 
@@ -295,7 +297,7 @@ You can add your resource, transformer, and shortcut with this file.
 
 Create a `.inline.js` file in your package root:
 
-```
+```js
 module.exports = {
   resources: [{
     name: "myresource",
@@ -340,32 +342,32 @@ Changelog
 
 * 0.5.0 (Sep 26, 2017)
 
-	- **Change: now the file would be read as binary accroding to its extension.**
-	- Add: ability to read/write binary file.
-	- Add: source type `text`, `raw`.
+  - **Change: now the file would be read as binary accroding to its extension.**
+  - Add: ability to read/write binary file.
+  - Add: source type `text`, `raw`.
 
 * 0.4.0 (Sep 22, 2017)
 
-	- Fix: dataurl is unable to handle binary file.
-	- **Change: now transformer would recieve a `file` argument.**
-	- Add: make `dataurl` determine mimetype by filename.
+  - Fix: dataurl is unable to handle binary file.
+  - **Change: now transformer would recieve a `file` argument.**
+  - Add: make `dataurl` determine mimetype by filename.
 
 * 0.3.1 (Sep 19, 2017)
 
-	- Fix crlf error. [#3](https://github.com/eight04/inline-js/issues/3)
+  - Fix crlf error. [#3](https://github.com/eight04/inline-js/issues/3)
 
 * 0.3.0 (Feb 4, 2017)
 
-	- Add $inline.shortcut.
+  - Add $inline.shortcut.
 
 * 0.2.0 (Jan 21, 2017)
 
-	- Add $inline.open, close, skipStart, skipEnd, start, end, line.
-	- Add transformer docstring, markdown, parse.
-	- Change eval transformer.
-	- Improve logging.
-	- Add --max-depth option.
-	- Other bugfixes.
+  - Add $inline.open, close, skipStart, skipEnd, start, end, line.
+  - Add transformer docstring, markdown, parse.
+  - Change eval transformer.
+  - Improve logging.
+  - Add --max-depth option.
+  - Other bugfixes.
 
 * 0.1.0 (Jan 21, 2017)
 
