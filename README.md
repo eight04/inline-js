@@ -330,7 +330,7 @@ module.exports = {
 Changelog
 ---------
 
-* 0.6.0 (Dec 25, 2017)
+* 0.6.0 (Dec 26, 2017)
 
   - Completely rewritten in async manner.
   - **Change: the first argument of the transformer is changed to a resource object.**
