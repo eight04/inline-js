@@ -1,6 +1,9 @@
 inline-js
 =========
 
+[![Build Status](https://travis-ci.org/eight04/inline-js.svg?branch=dev-async)](https://travis-ci.org/eight04/inline-js)
+[![Coverage Status](https://coveralls.io/repos/github/eight04/inline-js/badge.svg?branch=dev-async)](https://coveralls.io/github/eight04/inline-js?branch=dev-async)
+
 A static assets inliner, like PHP's `include`, with transformer!
 
 Installation
