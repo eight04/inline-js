@@ -9,6 +9,7 @@
     "mocha": "mocha --require intelli-espower-loader",
     "mocha-debug": "mocha --require intelli-espower-loader --reporter spec --inspect-brk",
     "nyc": "nyc --reporter=html npm run mocha",
+    "coverage": "nyc report --reporter=text-lcov | coveralls",
     "test": "npm run lint && npm run nyc",
     "preversion": "npm test",
     "version": "npm run build && git add .",
@@ -31,7 +32,9 @@
     "treeify": "^1.0.1"
   },
   "devDependencies": {
+    "coveralls": "^3.0.0",
     "crlf": "^1.1.1",
+    "eslint": "^4.14.0",
     "intelli-espower-loader": "^1.0.1",
     "mocha": "^4.0.1",
     "nyc": "^11.4.1",
