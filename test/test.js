@@ -309,7 +309,14 @@ describe("resource", () => {
         args: [command, "buffer"],
         expectType: "buffer",
         expect: Buffer.from("2\n")
+      }),
+      test({
+        args: ["exit 1"]
       })
+        .then(() => {
+          throw new Error("Must fail");
+        })
+        .catch(err => assert(err.message.includes("Non-zero exit code")))
     ]);
 	});
 });
