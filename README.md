@@ -330,6 +330,10 @@ module.exports = {
 Changelog
 ---------
 
+* 0.6.1 (Mar 16, 2018)
+
+  - Fix: throw when cmd resource return non-zero exit code.
+
 * 0.6.0 (Dec 26, 2017)
 
   - Completely rewritten in async manner.
