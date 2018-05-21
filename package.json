@@ -21,19 +21,18 @@
   "main": "index.js",
   "dependencies": {
     "clean-css": "^4.1.11",
-    "fs-extra": "^5.0.0",
-    "inline-js-core": "^0.1.0",
+    "fs-extra": "^6.0.1",
+    "inline-js-core": "^0.1.1",
     "is-binary-path": "^2.0.0",
-    "js-tokens": "^3.0.1",
     "mime": "^2.3.1",
-    "neodoc": "^1.4.0",
+    "neodoc": "^2.0.0",
     "treeify": "^1.1.0"
   },
   "devDependencies": {
     "coveralls": "^3.0.1",
     "crlf": "^1.1.1",
     "eslint": "^4.19.1",
-    "mocha": "^4.1.0",
+    "mocha": "^5.2.0",
     "nyc": "^11.8.0"
   },
   "repository": "eight04/inline-js"
