@@ -6,7 +6,12 @@ const {DEFAULT_RESOURCES} = require("./lib/default-resources");
 const {DEFAULT_TRANSFORMS} = require("./lib/default-transforms");
 const {findConfig} = require("./lib/conf");
 
-function init({out, dryRun, maxDepth, file}) {
+function init({
+  "--out": out,
+  "--dry-run": dryRun,
+  "--max-depth": maxDepth,
+  "<entry_file>": file
+}) {
   const inliner = createInliner({maxDepth});
   
   DEFAULT_RESOURCES.forEach(inliner.resource.add);
