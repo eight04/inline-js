@@ -22,23 +22,20 @@
   },
   "main": "index.js",
   "dependencies": {
-    "asyncro": "^2.0.1",
-    "clean-css": "^4.1.9",
+    "clean-css": "^4.1.11",
     "fs-extra": "^5.0.0",
     "is-binary-path": "^2.0.0",
     "js-tokens": "^3.0.1",
-    "mime": "^2.1.0",
+    "mime": "^2.3.1",
     "neodoc": "^1.4.0",
-    "treeify": "^1.0.1"
+    "treeify": "^1.1.0"
   },
   "devDependencies": {
-    "coveralls": "^3.0.0",
+    "coveralls": "^3.0.1",
     "crlf": "^1.1.1",
-    "eslint": "^4.14.0",
-    "intelli-espower-loader": "^1.0.1",
-    "mocha": "^4.0.1",
-    "nyc": "^11.4.1",
-    "power-assert": "^1.4.4"
+    "eslint": "^4.19.1",
+    "mocha": "^4.1.0",
+    "nyc": "^11.8.0"
   },
   "repository": "eight04/inline-js"
 }
