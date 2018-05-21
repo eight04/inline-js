@@ -1,10 +1,10 @@
 const fse = require("fs-extra");
 const treeify = require("treeify");
+const {createInliner} = require("inline-js-core");
 
 const {DEFAULT_RESOURCES} = require("./lib/default-resources");
 const {DEFAULT_TRANSFORMS} = require("./lib/default-transforms");
 const {findConfig} = require("./lib/conf");
-const {createInliner} = require("./lib/core");
 
 function init({out, dryRun, maxDepth, file}) {
   const inliner = createInliner({maxDepth});
