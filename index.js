@@ -1,108 +1,45 @@
-const asyncro = require("asyncro");
 const fse = require("fs-extra");
 const treeify = require("treeify");
 
-const resource = require("./lib/resource");
-const transformer = require("./lib/transformer");
-const shortcut = require("./lib/shortcut");
-const {parseText, parsePipes} = require("./lib/parser");
-const conf = require("./lib/conf");
-const logger = require("./lib/logger");
+const {DEFAULT_RESOURCES} = require("./lib/default-resources");
+const {DEFAULT_TRANSFORMS} = require("./lib/default-transforms");
+const {findConfig} = require("./lib/conf");
+const {createInliner} = require("./lib/core");
 
-// async
-function inline({source, target, depth = 0, maxDepth = 10, transforms = [], dependency = {}}) {
-	if (depth > maxDepth) {
-		throw new Error(`Max recursion depth ${maxDepth} exceeded. If you are not making an infinite loop, try to increase --max-depth limit.`);
-	}
+function init({out, dryRun, maxDepth, file}) {
+  const inliner = createInliner({maxDepth});
   
-  resource.resolve(source, target);
-  dependency = dependency[target.args[0]] = {};
+  DEFAULT_RESOURCES.forEach(inliner.resource.add);
+  DEFAULT_TRANSFORMS.forEach(inliner.transformer.add);
   
-	return resource.read(source, target)
-		.then(content => {
-			if (typeof content !== 'string') {
-				return content;
-			}
-      return doParseText(content);
-		})
-		.then(content => transformer.transform(target, content, transforms));
-    
-  function doParseText(content) {
-    return asyncro
-      .map(parseText(content), result => {
-        if (result.type === "text") {
-          return result.value;
-        }
-        if (result.type == "$inline.shortcut") {
-          shortcut.add(target, ...result.params);
-          return "";
-        }
-        let pipes = parsePipes(result.params[0]);
-        if (shortcut.has(target, pipes[0].name)) {
-          pipes = parsePipes(shortcut.expand(target, pipes));
-        }
-        const inlineTarget = {
-          name: pipes[0].args.length ? pipes[0].name : "file",
-          args: pipes[0].args.length ? pipes[0].args : [pipes[0].name]
-        };
-        return inline({
-          source: target,
-          target: inlineTarget,
-          depth: depth + 1,
-          maxDepth,
-          dependency,
-          transforms: pipes.slice(1)
-        });
-      })
-      .then(text => {
-        if (text.some(Buffer.isBuffer)) {
-          return Buffer.concat(text.map(b => {
-            if (!Buffer.isBuffer(b)) {
-              b = Buffer.from(b, "binary");
-            }
-            return b;
-          }));
-        }
-        return text.join("");
-      });
+  const config = findConfig(file);
+  if (config) {
+    console.error(`Use config file: ${config.confPath}`);
+    if (config.resources) {
+      config.resources.forEach(inliner.resource.add);
+    }
+    if (config.transforms) {
+      config.transforms.forEach(inliner.transformer.add);
+    }
+    if (config.shortcuts) {
+      config.shorcuts.forEach(inliner.globalShortcuts.add);
+    }
   }
-}
-
-function init({
-	args: {
-		"--out": out,
-		"--dry-run": dry,
-		"--max-depth": maxDepth,
-		"<entry_file>": file,
-	}
-}) {
-	if (!dry && !out) {
-		logger.startDebug();
-	}
-
-	logger.log("inline-js started\n");
   
-  conf.findAndLoad(file);
-
-	const target = {
-    name: "text",
-    args: [file]
-  };
-  const dependency = {};
-  
-  return inline({target, maxDepth, dependency}).then(content => {
-    logger.log(`Result inline tree:`);
-    logger.log(Object.keys(dependency)[0]);
-    logger.log(treeify.asTree(Object.values(dependency)[0]));
+	console.error("inline-js started\n");
+  return inliner.inline({name: "text", args: [file]}).then(({content, dependency}) => {
+    console.error(`Result inline tree:`);
+    console.error(file);
+    console.error(treeify.asTree(dependency));
     
-    if (dry) {
-      logger.log(`[dry] Output to ${out || "stdout"}`);
+    if (dryRun) {
+      console.error(`[dry] Output to ${out || "stdout"}`);
     } else if (out) {
       fse.outputFileSync(out, content);
     } else {
-      logger.write(content);
+      process.stdout.write(content);
     }
   });
 }
 
-module.exports = {init, inline};
+module.exports = {init};
