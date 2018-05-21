@@ -1,8 +1,11 @@
 /* eslint-env mocha */
-const assert = require("power-assert");
+const assert = require("assert");
 
 describe("transforms", () => {
-  const transformer = require("../lib/transformer");
+  const {DEFAULT_TRANSFORMS} = require("../lib/default-transforms");
+  const {createTransformer} = require("inline-js-core/lib/transformer");
+  const transformer = createTransformer();
+  DEFAULT_TRANSFORMS.forEach(transformer.add);
 	
   function prepare(baseOptions) {
     return options => {
@@ -93,7 +96,10 @@ describe("transforms", () => {
 });
 
 describe("resource", () => {
-  const resource = require("../lib/resource");
+  const {DEFAULT_RESOURCES} = require("../lib/default-resources");
+  const {createResourceLoader} = require("inline-js-core/lib/resource");
+  const resource = createResourceLoader();
+  DEFAULT_RESOURCES.forEach(resource.add);
   
   function prepare(baseOptions) {
     return options => {
@@ -174,49 +180,27 @@ describe("resource", () => {
 });
 
 describe("conf", () => {
-  const MODS = ["shortcut", "resource", "transformer", "conf"];
+  const path = require("path");
+  const {findConfig} = require("../lib/conf");
   
-  function test(file, expectConfigured) {
-    MODS.forEach(name => {
-      delete require.cache[require.resolve(`../lib/${name}`)];
-    });
-    const [shortcut, resource, transformer, conf] = MODS.map(name => {
-      return require(`../lib/${name}`);
-    });
-    
-    conf.findAndLoad(file);
-    
-    assert(shortcut.has(null, "shortcutConfigured") === expectConfigured);
-    assert(resource.has("resourceConfigured") === expectConfigured);
-    assert(transformer.has("transformConfigured") === expectConfigured);
-    
-    if (expectConfigured) {
-      return Promise.all([
-        Promise.resolve(shortcut.expand(null, [{name: "shortcutConfigured", args: []}]))
-          .then(result => {
-            assert(result === "shortcutOK");
-          }),
-        resource.read(null, {name: "resourceConfigured", args: []})
-          .then(content => {
-            assert(content === "resourceOK");
-          }),
-        transformer.transform(null, "", [{name: "transformConfigured", args: []}])
-          .then(content => {
-            assert(content === "transformOK");
-          })
-      ]);
+  function test(file, expectedConfPath) {
+    const result = findConfig(file);
+    if (expectedConfPath) {
+      assert.equal(result.confPath, path.resolve(expectedConfPath));
+    } else {
+      assert(!result);
     }
   }
   
   it("find in current path", () => {
-    return test(`${__dirname}/conf/test`, true);
+    return test(`${__dirname}/conf/test`, `${__dirname}/conf/.inline.js`);
   });
   
   it("find in ancestor", () => {
-    return test(`${__dirname}/conf/b/test`, true);
+    return test(`${__dirname}/conf/b/test`, `${__dirname}/conf/.inline.js`);
   });
   
   it("don't go up through package root", () => {
-    return test(`${__dirname}/conf/a/test`, false);
+    return test(`${__dirname}/conf/a/test`, null);
   });
 });

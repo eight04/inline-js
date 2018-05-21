@@ -3,6 +3,7 @@ inline-js
 
 [![Build Status](https://travis-ci.org/eight04/inline-js.svg?branch=dev-async)](https://travis-ci.org/eight04/inline-js)
 [![Coverage Status](https://coveralls.io/repos/github/eight04/inline-js/badge.svg?branch=dev-async)](https://coveralls.io/github/eight04/inline-js?branch=dev-async)
+[![install size](https://packagephobia.now.sh/badge?p=inline-js)](https://packagephobia.now.sh/result?p=inline-js)
 
 A static assets inliner, like PHP's `include`, with transformer!
 
