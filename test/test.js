@@ -154,7 +154,8 @@ describe("resource", () => {
     ]);
 	});
 	
-	it("cmd", () => {
+	it("cmd", function() {
+    this.slow(5000);
     const command = 'node -e "console.log(1 + 1)"';
     const test = prepare({name: "cmd"});
 		return Promise.all([
