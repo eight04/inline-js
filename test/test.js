@@ -77,6 +77,11 @@ describe("transforms", () => {
     const test = prepare({name: "dataurl"});
     return Promise.all([
       test({
+        source: {name: "file", args: ["test"]},
+        content: fs.readFileSync(`${__dirname}/base64/test`),
+        expect: fs.readFileSync(`${__dirname}/base64/test-base64.txt`, "utf8")
+      }),
+      test({
         source: {name: "file", args: ["test.css"]},
         content: fs.readFileSync(`${__dirname}/base64/test.css`),
         expect: fs.readFileSync(`${__dirname}/base64/test.css-base64.txt`, "utf8")
