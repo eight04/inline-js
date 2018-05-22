@@ -14,7 +14,7 @@ describe("transforms", () => {
         {}, baseOptions, options);
       return transformer.transform(source, content, [{name, args}])
         .then(
-          result => assert(result === expect),
+          result => assert.equal(result, expect),
           err => {
             if (!error) {
               throw err;
@@ -53,6 +53,15 @@ describe("transforms", () => {
       test({args: ["nested", "prop"], expect: 123})
     ]);
 	});
+  
+  it("trim", () => {
+    const test = prepare({
+      name: "trim",
+      content: " foo  ",
+      expect: "foo"
+    });
+    return test();
+  });
 	
 	it("markdown", () => {
     const test = prepare({
@@ -169,8 +178,7 @@ describe("resource", () => {
     ]);
 	});
 	
-	it("cmd", function() {
-    this.slow(5000);
+	it("cmd", () => {
     const command = 'node -e "console.log(1 + 1)"';
     const test = prepare({name: "cmd"});
 		return Promise.all([
@@ -192,7 +200,8 @@ describe("resource", () => {
         })
         .catch(err => assert(err.message.includes("Non-zero exit code")))
     ]);
-	});
+	})
+    .timeout(5000);
   
   it("resolve two paths", () => {
     const source = {name: "text", args: ["foo/bar.txt"]};
