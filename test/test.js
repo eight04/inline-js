@@ -1,5 +1,6 @@
 /* eslint-env mocha */
 const assert = require("assert");
+const sinon = require("sinon");
 
 describe("transforms", () => {
   const {DEFAULT_TRANSFORMS} = require("../lib/default-transforms");
@@ -212,13 +213,18 @@ describe("conf", () => {
   });
   
   it("cache", () => {
-    const conf = createConfigLocator();
+    const {tryRequire, tryAccess} = require("../lib/conf");
+    const _tryRequire = sinon.spy(tryRequire);
+    const _tryAccess = sinon.spy(tryAccess);
+    const conf = createConfigLocator({_tryRequire, _tryAccess});
     return Promise.all([
       conf.findConfig(`${__dirname}/conf/test`),
       conf.findConfig(`${__dirname}/conf/b/test`)
     ])
       .then(([conf1, conf2]) => {
         assert.equal(conf1, conf2);
+        assert(_tryRequire.calledTwice);
+        assert(_tryAccess.calledTwice);
       });
   });
 });
