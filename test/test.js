@@ -97,6 +97,7 @@ describe("transforms", () => {
 });
 
 describe("resource", () => {
+  const path = require("path");
   const {DEFAULT_RESOURCES} = require("../lib/default-resources");
   const {createResourceLoader} = require("inline-js-core/lib/resource");
   const resource = createResourceLoader();
@@ -179,6 +180,13 @@ describe("resource", () => {
         .catch(err => assert(err.message.includes("Non-zero exit code")))
     ]);
 	});
+  
+  it("resolve two paths", () => {
+    const source = {name: "text", args: ["foo/bar.txt"]};
+    const target = {name: "file", args: ["baz/bak.txt"]};
+    resource.resolve(source, target);
+    assert.equal(target.args[0], path.resolve("foo/baz/bak.txt"));
+  });
 });
 
 describe("conf", () => {
