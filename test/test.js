@@ -178,7 +178,8 @@ describe("resource", () => {
     ]);
 	});
 	
-	it("cmd", () => {
+	it("cmd", t => {
+    t.timeout(5000);
     const command = 'node -e "console.log(1 + 1)"';
     const test = prepare({name: "cmd"});
 		return Promise.all([
@@ -200,8 +201,7 @@ describe("resource", () => {
         })
         .catch(err => assert(err.message.includes("Non-zero exit code")))
     ]);
-	})
-    .timeout(5000);
+	});
   
   it("resolve two paths", () => {
     const source = {name: "text", args: ["foo/bar.txt"]};
