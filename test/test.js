@@ -185,12 +185,14 @@ describe("conf", () => {
   const {findConfig} = require("../lib/conf");
   
   function test(file, expectedConfPath) {
-    const result = findConfig(file);
-    if (expectedConfPath) {
-      assert.equal(result.confPath, path.resolve(expectedConfPath));
-    } else {
-      assert(!result);
-    }
+    return findConfig(file)
+      .then(result => {
+        if (expectedConfPath) {
+          assert.equal(result.confPath, path.resolve(expectedConfPath));
+        } else {
+          assert(!result);
+        }
+      });
   }
   
   it("find in current path", () => {
