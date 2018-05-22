@@ -10,10 +10,17 @@ describe("transforms", () => {
 	
   function prepare(baseOptions) {
     return options => {
-      const {name, content, args = [], expect, source} = Object.assign(
+      const {name, content, args = [], expect, source, error} = Object.assign(
         {}, baseOptions, options);
       return transformer.transform(source, content, [{name, args}])
-        .then(result => assert(result === expect));
+        .then(
+          result => assert(result === expect),
+          err => {
+            if (!error) {
+              throw err;
+            }
+          }
+        );
     };
   }
 	
@@ -60,7 +67,8 @@ describe("transforms", () => {
         args: ["quote"],
         content: "some text\nsome text",
         expect: "> some text\n> some text"
-      })
+      }),
+      test({args: ["unknown"], error: true})
     ]);
 	});
 	
