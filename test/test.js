@@ -182,7 +182,7 @@ describe("resource", () => {
 
 describe("conf", () => {
   const path = require("path");
-  const {findConfig} = require("../lib/conf");
+  const {findConfig, createConfigLocator} = require("../lib/conf");
   
   function test(file, expectedConfPath) {
     return findConfig(file)
@@ -205,5 +205,20 @@ describe("conf", () => {
   
   it("don't go up through package root", () => {
     return test(`${__dirname}/conf/a/test`, null);
+  });
+  
+  it("stop at root", () => {
+    return test("/", null);
+  });
+  
+  it("cache", () => {
+    const conf = createConfigLocator();
+    return Promise.all([
+      conf.findConfig(`${__dirname}/conf/test`),
+      conf.findConfig(`${__dirname}/conf/b/test`)
+    ])
+      .then(([conf1, conf2]) => {
+        assert.equal(conf1, conf2);
+      });
   });
 });
