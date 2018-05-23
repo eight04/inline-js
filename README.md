@@ -254,6 +254,28 @@ Eval JavaScript expression. You can access the content with `$0`.
 var version = $inline("./package.json|eval:JSON.parse($0).version|stringify");
 ```
 
+### indent
+Indent the string according the the indent of the current line.
+
+*foo.js*
+```js
+function foo() {
+  $inline("bar.js|indent");
+}
+```
+*bar.js*
+```js
+console.log("foo");
+console.log("bar");
+```
+`inlinejs foo.js` result:
+```js
+function foo() {
+  console.log("foo");
+  console.log("bar");
+}
+```
+
 ### markdown
 Wrap content with markdown codeblock, code, or quote.
 ````js
@@ -330,6 +352,23 @@ module.exports = {
 
 Changelog
 ---------
+
+* 0.7.0 (May 23, 2018)
+
+  - The core inliner logic had been splitted out as [inline-js-core](https://github.com/eight04/inline-js-core). This repository now only contains:
+  
+    - Config locator.
+    - Builtin resource loader.
+    - Builtin transformers.
+    
+  - More tests.
+  - Add: `indent` transformer. It would indent inlined file according to the indent of the current line.
+  - Add: config locator has a cache now.
+  - Add: `$inline()` now accepts up to 3 arguments.
+  - Fix: Escaped characters are correctly handled in `docstring` transformer.
+  - **Change: In `dataurl` transformer, `charset` is set to `utf8` if the content is a string. It makes sense since we actually always use `utf8` encoding to convert string to Buffer.**
+  - **Change: The first argument of `transform()` function is changed to a `transformContext` object. To access the resource, visit `transformContext.inlineTarget`.**
+  - **Change: `$inline.line()` now preserves indent. It doesn't replace the entire line anymore.**
 
 * 0.6.1 (Mar 16, 2018)
 
