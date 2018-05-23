@@ -63,6 +63,18 @@ describe("transforms", () => {
     ]);
 	});
   
+  it("string", () => {
+    const test = prepare({
+      name: "string",
+      content: Buffer.from("我")
+    });
+    return Promise.all([
+      test({expect: "我"}),
+      test({args: ["binary"], expect: 'æ'}),
+      test({content: "test", expect: "test"})
+    ]);
+  });
+  
   it("stringify", () => {
     const test = prepare({
       name: "stringify",
