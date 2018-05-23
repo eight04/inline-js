@@ -1,6 +1,6 @@
 {
   "name": "inline-js",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "Static assets inliner",
   "author": "eight04 <eight04@gmail.com>",
   "license": "MIT",
@@ -18,7 +18,10 @@
   "bin": {
     "inlinejs": "cli.js"
   },
-  "files": ["cli.js", "lib"],
+  "files": [
+    "cli.js",
+    "lib"
+  ],
   "main": "index.js",
   "dependencies": {
     "clean-css": "^4.1.11",
