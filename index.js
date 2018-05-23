@@ -18,17 +18,18 @@ function init({
   DEFAULT_TRANSFORMS.forEach(inliner.transformer.add);
   
   return findConfig(file)
-    .then(config => {
-      if (config) {
-        console.error(`Use config file: ${config.confPath}`);
-        if (config.resources) {
-          config.resources.forEach(inliner.resource.add);
+    .then(result => {
+      if (result) {
+        const {conf, confPath} = result;
+        console.error(`Use config file: ${confPath}`);
+        if (conf.resources) {
+          conf.resources.forEach(inliner.resource.add);
         }
-        if (config.transforms) {
-          config.transforms.forEach(inliner.transformer.add);
+        if (conf.transforms) {
+          conf.transforms.forEach(inliner.transformer.add);
         }
-        if (config.shortcuts) {
-          config.shorcuts.forEach(inliner.globalShortcuts.add);
+        if (conf.shortcuts) {
+          conf.shortcuts.forEach(inliner.globalShortcuts.add);
         }
       }
       console.error("inline-js started\n");
