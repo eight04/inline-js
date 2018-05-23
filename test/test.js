@@ -59,20 +59,27 @@ describe("transforms", () => {
     return test();
   });
   
-  it("indent", () => {
+  describe("indent", () => {
+    const ctx = {
+      sourceContent: "  $inline('foo|indent')",
+      inlineDirective: {
+        start: 2,
+        end: 23
+      }
+    };
     const test = prepare({
       name: "indent",
       content: "foo\nbar",
-      ctx: {
-        sourceContent: "  $inline('foo|indent')",
-        inlineDirective: {
-          start: 2,
-          end: 23
-        }
-      },
+      ctx,
       expect: "foo\n  bar"
     });
-    return test();
+    
+    it("basic", () => test());
+    
+    it("no indent", () => test({
+      ctx: Object.assign({}, ctx, {sourceContent: "__$inline('foo|indent')"}),
+      expect: "foo\nbar"
+    }));
   });
 	
 	it("parse", () => {
