@@ -337,8 +337,8 @@ describe("functional", () => {
       .catch(() => {})
       .then(() => {
         stdMocks.restore();
-        const output = stdMocks.flush().stdout.join("");
-        assert.equal(output, "  Hello I am foo");
+        const output = stdMocks.flush();
+        assert.equal(output.stdout.join(""), "  Hello I am bar");
       });
   });
 });

@@ -3,7 +3,7 @@ const fs = require("fs");
 module.exports = {
   shortcuts: [{
     name: "my-shortcut",
-    expand: "my-resource:foo.txt|my-transform"
+    expand: "foo.txt|my-transform"
   }],
   transforms: [{
     name: "my-transform",
@@ -14,8 +14,8 @@ module.exports = {
   resources: [{
     name: "my-resource",
     read(source, target) {
-      if (target.args[0] === "foo.txt") {
-        return fs.readFileSync(`${__dirname}/foo.txt`, "utf8");
+      if (target.args[0] === "bar.txt") {
+        return fs.readFileSync(`${__dirname}/bar.txt`, "utf8");
       }
       throw new Error("Unknown file");
     }

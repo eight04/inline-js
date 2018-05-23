@@ -1,3 +1,4 @@
+const path = require("path");
 const fse = require("fs-extra");
 const treeify = require("treeify");
 const {createInliner} = require("inline-js-core");
@@ -37,7 +38,7 @@ function init({
     })
     .then(({content, dependency}) => {
       console.error(`Result inline tree:`);
-      console.error(file);
+      console.error(path.resolve(file));
       console.error(treeify.asTree(dependency));
       
       if (dryRun) {

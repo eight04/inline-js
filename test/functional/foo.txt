@@ -1,1 +1,1 @@
-I am foo
+$inline("my-resource:bar.txt")
