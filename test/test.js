@@ -357,4 +357,66 @@ describe("functional", () => {
         assert.equal(content, "  Hello I am bar");
       });
   });
+  
+  it("dry + out", () => {
+    const _outputFileSync = sinon.spy();
+    return init({
+      "<entry_file>": `${__dirname}/functional/entry.txt`,
+      "--out": "foo.txt",
+      "--dry-run": true,
+      _outputFileSync
+    })
+      .then(() => {
+        assert(!_outputFileSync.called);
+      });
+  });
+  
+  it("dry + stdout", () => {
+    stdMocks.use();
+    return init({
+      "<entry_file>": `${__dirname}/functional/entry.txt`,
+      "--dry-run": true
+    })
+      .catch(err => {
+        stdMocks.restore();
+        throw err;
+      })
+      .then(() => {
+        stdMocks.restore();
+        const output = stdMocks.flush().stdout.join("");
+        assert.equal(output, "");
+      });
+  });
+  
+  it("no config", () => {
+    let filename, content;
+    return init({
+      "<entry_file>": `${__dirname}/no-config/entry.txt`,
+      "--out": "foo.txt",
+      _outputFileSync: (_filename, _content) => {
+        filename = _filename;
+        content = _content;
+      }
+    })
+      .then(() => {
+        assert.equal(filename, "foo.txt");
+        assert.equal(content, "I am bar");
+      });
+  });
+  
+  it("empty config", () => {
+    let filename, content;
+    return init({
+      "<entry_file>": `${__dirname}/no-config/entry.txt`,
+      "--out": "foo.txt",
+      _outputFileSync: (_filename, _content) => {
+        filename = _filename;
+        content = _content;
+      }
+    })
+      .then(() => {
+        assert.equal(filename, "foo.txt");
+        assert.equal(content, "I am bar");
+      });
+  });
 });

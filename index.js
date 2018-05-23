@@ -13,7 +13,7 @@ function init({
   "--max-depth": maxDepth,
   "<entry_file>": file,
   _outputFileSync = fse.outputFileSync
-} = {}) {
+}) {
   const inliner = createInliner({maxDepth});
   
   DEFAULT_RESOURCES.forEach(inliner.resource.add);
