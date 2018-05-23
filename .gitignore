@@ -1,7 +1,5 @@
 node_modules
 coverage
 .nyc_output
-
-*.log
-
 .eslintcache
+*.tgz

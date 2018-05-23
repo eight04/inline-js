@@ -18,6 +18,7 @@
   "bin": {
     "inlinejs": "cli.js"
   },
+  "files": ["cli.js", "lib"],
   "main": "index.js",
   "dependencies": {
     "clean-css": "^4.1.11",
