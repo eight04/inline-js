@@ -12,7 +12,7 @@ function init({
   "--dry-run": dryRun,
   "--max-depth": maxDepth,
   "<entry_file>": file,
-  _outputFileSync = fse.outputFileSync,
+  _outputFile = fse.outputFile,
   _log = console.error, // eslint-disable-line no-console
   _write = process.stdout.write.bind(process.stdout)
 }) {
@@ -47,7 +47,7 @@ function init({
       if (dryRun) {
         _log(`[dry] Output to ${out || "stdout"}`);
       } else if (out) {
-        _outputFileSync(out, content);
+        return _outputFile(out, content);
       } else {
         _write(content);
       }

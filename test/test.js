@@ -349,7 +349,7 @@ describe("functional", () => {
     return init({
       "<entry_file>": `${__dirname}/functional/full-config/entry.txt`,
       "--out": "foo.txt",
-      _outputFileSync: (_filename, _content) => {
+      _outputFile: (_filename, _content) => {
         filename = _filename;
         content = _content;
       }
@@ -361,15 +361,15 @@ describe("functional", () => {
   });
   
   it("dry + out", () => {
-    const _outputFileSync = sinon.spy();
+    const _outputFile = sinon.spy();
     return init({
       "<entry_file>": `${__dirname}/functional/full-config/entry.txt`,
       "--out": "foo.txt",
       "--dry-run": true,
-      _outputFileSync
+      _outputFile
     })
       .then(() => {
-        assert(!_outputFileSync.called);
+        assert(!_outputFile.called);
       });
   });
   
