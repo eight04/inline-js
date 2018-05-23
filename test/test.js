@@ -10,9 +10,16 @@ describe("transforms", () => {
 	
   function prepare(baseOptions) {
     return options => {
-      const {name, content, args = [], expect, source, error} = Object.assign(
-        {}, baseOptions, options);
-      return transformer.transform({inlineTarget: source}, content, [{name, args}])
+      const {
+        name,
+        content,
+        args = [],
+        expect,
+        source,
+        error,
+        ctx = {inlineTarget: source}
+      } = Object.assign({}, baseOptions, options);
+      return transformer.transform(ctx, content, [{name, args}])
         .then(
           result => assert.equal(result, expect),
           err => {
@@ -48,6 +55,22 @@ describe("transforms", () => {
       content: "123",
       args: ["Number($0) + 321"],
       expect: 444
+    });
+    return test();
+  });
+  
+  it("indent", () => {
+    const test = prepare({
+      name: "indent",
+      content: "foo\nbar",
+      ctx: {
+        sourceContent: "  $inline('foo|indent')",
+        inlineDirective: {
+          start: 2,
+          end: 23
+        }
+      },
+      expect: "foo\n  bar"
     });
     return test();
   });
