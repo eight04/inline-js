@@ -12,19 +12,21 @@ function init({
   "--dry-run": dryRun,
   "--max-depth": maxDepth,
   "<entry_file>": file,
-  _outputFileSync = fse.outputFileSync
+  _outputFileSync = fse.outputFileSync,
+  _log = console.error, // eslint-disable-line no-console
+  _write = process.stdout.write.bind(process.stdout)
 }) {
   const inliner = createInliner({maxDepth});
   
   DEFAULT_RESOURCES.forEach(inliner.resource.add);
   DEFAULT_TRANSFORMS.forEach(inliner.transformer.add);
   
-  console.error("inline-js started\n");
+  _log("inline-js started\n");
   return findConfig(file)
     .then(result => {
       if (result) {
         const {conf, confPath} = result;
-        console.error(`Use config file: ${confPath}`);
+        _log(`Use config file: ${confPath}`);
         if (conf.resources) {
           conf.resources.forEach(inliner.resource.add);
         }
@@ -38,16 +40,16 @@ function init({
       return inliner.inline({name: "text", args: [file]});
     })
     .then(({content, dependency}) => {
-      console.error(`Result inline tree:`);
-      console.error(path.resolve(file));
-      console.error(treeify.asTree(dependency));
+      _log(`Result inline tree:`);
+      _log(path.resolve(file));
+      _log(treeify.asTree(dependency));
       
       if (dryRun) {
-        console.error(`[dry] Output to ${out || "stdout"}`);
+        _log(`[dry] Output to ${out || "stdout"}`);
       } else if (out) {
         _outputFileSync(out, content);
       } else {
-        process.stdout.write(content);
+        _write(content);
       }
     });
 }

@@ -36,8 +36,7 @@
     "eslint": "^4.19.1",
     "mocha": "^5.2.0",
     "mocha-context": "^0.1.2",
-    "nyc": "^11.8.0",
-    "std-mocks": "^1.0.1"
+    "nyc": "^11.8.0"
   },
   "repository": "eight04/inline-js"
 }

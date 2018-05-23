@@ -2,7 +2,6 @@
 const fs = require("fs");
 const assert = require("assert");
 const sinon = require("sinon");
-const stdMocks = require("std-mocks");
 
 describe("transforms", () => {
   const {DEFAULT_TRANSFORMS} = require("../lib/default-transforms");
@@ -332,23 +331,20 @@ describe("functional", () => {
   
   for (const dir of fs.readdirSync(`${__dirname}/functional`)) {
     it(dir, () => {
-      stdMocks.use();
+      let content;
       return init({
-        "<entry_file>": `${__dirname}/functional/${dir}/entry.txt`
+        "<entry_file>": `${__dirname}/functional/${dir}/entry.txt`,
+        _write: _content => {
+          content = _content;
+        }
       })
-        .catch(err => {
-          stdMocks.restore();
-          throw err;
-        })
         .then(() => {
-          stdMocks.restore();
-          const output = stdMocks.flush().stdout.join("");
-          assert.equal(output, fs.readFileSync(`${__dirname}/functional/${dir}/expect.txt`));
+          assert.equal(content, fs.readFileSync(`${__dirname}/functional/${dir}/expect.txt`, "utf8"));
         });
     });
   }
   
-  it("output", () => {
+  it("output file", () => {
     let filename, content;
     return init({
       "<entry_file>": `${__dirname}/functional/full-config/entry.txt`,
@@ -378,19 +374,14 @@ describe("functional", () => {
   });
   
   it("dry + stdout", () => {
-    stdMocks.use();
+    const _write = sinon.spy();
     return init({
       "<entry_file>": `${__dirname}/functional/full-config/entry.txt`,
-      "--dry-run": true
+      "--dry-run": true,
+      _write
     })
-      .catch(err => {
-        stdMocks.restore();
-        throw err;
-      })
       .then(() => {
-        stdMocks.restore();
-        const output = stdMocks.flush().stdout.join("");
-        assert.equal(output, "");
+        assert(!_write.called);
       });
   });
 });
