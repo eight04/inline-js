@@ -12,7 +12,7 @@ describe("transforms", () => {
     return options => {
       const {name, content, args = [], expect, source, error} = Object.assign(
         {}, baseOptions, options);
-      return transformer.transform(source, content, [{name, args}])
+      return transformer.transform({inlineTarget: source}, content, [{name, args}])
         .then(
           result => assert.equal(result, expect),
           err => {
