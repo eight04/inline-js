@@ -1,108 +1,57 @@
-const asyncro = require("asyncro");
+const path = require("path");
 const fse = require("fs-extra");
 const treeify = require("treeify");
+const {createInliner} = require("inline-js-core");
 
-const resource = require("./lib/resource");
-const transformer = require("./lib/transformer");
-const shortcut = require("./lib/shortcut");
-const {parseText, parsePipes} = require("./lib/parser");
-const conf = require("./lib/conf");
-const logger = require("./lib/logger");
-
-// async
-function inline({source, target, depth = 0, maxDepth = 10, transforms = [], dependency = {}}) {
-	if (depth > maxDepth) {
-		throw new Error(`Max recursion depth ${maxDepth} exceeded. If you are not making an infinite loop, try to increase --max-depth limit.`);
-	}
-  
-  resource.resolve(source, target);
-  dependency = dependency[target.args[0]] = {};
-  
-	return resource.read(source, target)
-		.then(content => {
-			if (typeof content !== 'string') {
-				return content;
-			}
-      return doParseText(content);
-		})
-		.then(content => transformer.transform(target, content, transforms));
-    
-  function doParseText(content) {
-    return asyncro
-      .map(parseText(content), result => {
-        if (result.type === "text") {
-          return result.value;
-        }
-        if (result.type == "$inline.shortcut") {
-          shortcut.add(target, ...result.params);
-          return "";
-        }
-        let pipes = parsePipes(result.params[0]);
-        if (shortcut.has(target, pipes[0].name)) {
-          pipes = parsePipes(shortcut.expand(target, pipes));
-        }
-        const inlineTarget = {
-          name: pipes[0].args.length ? pipes[0].name : "file",
-          args: pipes[0].args.length ? pipes[0].args : [pipes[0].name]
-        };
-        return inline({
-          source: target,
-          target: inlineTarget,
-          depth: depth + 1,
-          maxDepth,
-          dependency,
-          transforms: pipes.slice(1)
-        });
-      })
-      .then(text => {
-        if (text.some(Buffer.isBuffer)) {
-          return Buffer.concat(text.map(b => {
-            if (!Buffer.isBuffer(b)) {
-              b = Buffer.from(b, "binary");
-            }
-            return b;
-          }));
-        }
-        return text.join("");
-      });
-  }
-}
+const {DEFAULT_RESOURCES} = require("./lib/default-resources");
+const {DEFAULT_TRANSFORMS} = require("./lib/default-transforms");
+const {findConfig} = require("./lib/conf");
 
 function init({
-	args: {
-		"--out": out,
-		"--dry-run": dry,
-		"--max-depth": maxDepth,
-		"<entry_file>": file,
-	}
+  "--out": out,
+  "--dry-run": dryRun,
+  "--max-depth": maxDepth,
+  "<entry_file>": file,
+  _outputFile = fse.outputFile,
+  _log = console.error, // eslint-disable-line no-console
+  _write = process.stdout.write.bind(process.stdout)
 }) {
-	if (!dry && !out) {
-		logger.startDebug();
-	}
-
-	logger.log("inline-js started\n");
+  const inliner = createInliner({maxDepth});
   
-  conf.findAndLoad(file);
-
-	const target = {
-    name: "text",
-    args: [file]
-  };
-  const dependency = {};
+  DEFAULT_RESOURCES.forEach(inliner.resource.add);
+  DEFAULT_TRANSFORMS.forEach(inliner.transformer.add);
   
-  return inline({target, maxDepth, dependency}).then(content => {
-    logger.log(`Result inline tree:`);
-    logger.log(Object.keys(dependency)[0]);
-    logger.log(treeify.asTree(Object.values(dependency)[0]));
-    
-    if (dry) {
-      logger.log(`[dry] Output to ${out || "stdout"}`);
-    } else if (out) {
-      fse.outputFileSync(out, content);
-    } else {
-      logger.write(content);
-    }
-  });
+  _log("inline-js started\n");
+  return findConfig(file)
+    .then(result => {
+      if (result) {
+        const {conf, confPath} = result;
+        _log(`Use config file: ${confPath}`);
+        if (conf.resources) {
+          conf.resources.forEach(inliner.resource.add);
+        }
+        if (conf.transforms) {
+          conf.transforms.forEach(inliner.transformer.add);
+        }
+        if (conf.shortcuts) {
+          conf.shortcuts.forEach(inliner.globalShortcuts.add);
+        }
+      }
+      return inliner.inline({name: "text", args: [file]});
+    })
+    .then(({content, dependency}) => {
+      _log(`Result inline tree:`);
+      _log(path.resolve(file));
+      _log(treeify.asTree(dependency));
+      
+      if (dryRun) {
+        _log(`[dry] Output to ${out || "stdout"}`);
+      } else if (out) {
+        return _outputFile(out, content);
+      } else {
+        _write(content);
+      }
+    });
 }
 
-module.exports = {init, inline};
+module.exports = {init};

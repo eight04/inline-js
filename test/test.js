@@ -1,163 +1,34 @@
 /* eslint-env mocha */
-const assert = require("power-assert");
-
-describe("parsePipes", () => {
-  const {parsePipes} = require("../lib/parser");
-  
-  it("basic", () => {
-    const result = parsePipes("test:123");
-    assert.deepEqual(result, [{name: "test", args: ["123"]}]);
-  });
-  
-  it("no value", () => {
-    const result = parsePipes("a");
-    assert.deepEqual(result, [{name: "a", args: []}]);
-  });
-  
-  it("multiple values", () => {
-    const result = parsePipes("a:b,c");
-    assert.deepEqual(result, [{name: "a", args: ["b", "c"]}]);
-  });
-  
-  it("escape characters", () => {
-    const result = parsePipes("a\\:b:a\\,b");
-    assert.deepEqual(result, [{name: "a:b", args: ["a,b"]}]);
-  });
-});
-
-describe("parseDirective", () => {
-  const {parseDirective} = require("../lib/parser");
-  
-	it("shortcut", () => {
-		const result = parseDirective("$inline.shortcut('a', 'b')");
-    assert(result.type === "$inline.shortcut");
-    assert.deepEqual(result.params, ["a", "b"]);
-	});
-});
-
-describe("shortcut", () => {
-  const {parsePipes} = require("../lib/parser");
-  
-  function prepare(name, expand) {
-    delete require.cache[require.resolve("../lib/shortcut")];
-    const shortcut = require("../lib/shortcut");
-    shortcut.addGlobal({name, expand});
-    return exp => {
-      const pipes = parsePipes(exp);
-      return shortcut.expand(null, pipes);
-    };
-  }
-	
-	it("basic", () => {
-		const expand = prepare("test", "a.txt|tr:$1");
-		assert(expand("test:abc") === "a.txt|tr:abc");
-	});
-	
-	it("multiple arguments", () => {
-		const expand = prepare("test", "a.txt|tr:$1|tr2:$2");
-		assert(expand("test:abc,123") === "a.txt|tr:abc|tr2:123");
-	});
-	
-	it("$&", () => {
-		const expand = prepare("test", "a.txt|tr:$&");
-		assert(expand("test:abc,123") === "a.txt|tr:abc,123");
-	});
-	
-	it("additional pipes", () => {
-		const expand = prepare("test", "a.txt|tr");
-		assert(expand("test|tr2|tr3") === "a.txt|tr|tr2|tr3");
-	});
-  
-  it("use function", () => {
-    const expand = prepare("test", (source, a, b) => `a.txt|${a}|${b}`);
-    assert(expand("test:123,456") === "a.txt|123|456");
-  });
-});
-
-describe("parseText", () => {
-	const {parseText} = require("../lib/parser");
-  
-	it("$inline", () => {
-    const [result] = parseText("$inline('path/to/file')");
-    assert(result.type === "$inline");
-    assert.deepEqual(result.params, ["path/to/file"]);
-	});
-	
-	it("start and end", () => {
-		const [left, result, right] = parseText("$inline.start('./a.txt')\ntest\n$inline.end");
-    assert(left.type === "text");
-    assert(left.value === "$inline.start('./a.txt')\n");
-    
-    assert(result.type === "$inline.start");
-    assert.deepEqual(result.params, ["./a.txt"]);
-    
-    assert(right.type === "text");
-    assert(right.value === "\n$inline.end");
-	});
-	
-	it("line", () => {
-		const [left, result, right] = parseText("test\ntest$inline.line('path/to/file')test\ntest");
-    assert(left.type === "text");
-    assert(left.value === "test\n");
-    
-    assert(result.type === "$inline.line");
-    assert.deepEqual(result.params, ["path/to/file"]);
-    
-    assert(right.type === "text");
-    assert(right.value === "\ntest");
-	});
-	
-	it("shortcut", () => {
-    const content = "$inline.shortcut('test', 'file|t1:$2,$1')";
-		const [result, text] = parseText(content);
-    assert(result.type === "$inline.shortcut");
-    assert.deepEqual(result.params, ["test", "file|t1:$2,$1"]);
-    
-    assert(text.type === "text");
-    assert(text.value === content);
-	});
-});
-
-describe("inline", () => {
-  const {inline} = require("..");
-  
-  function mustFailed() {
-    throw new Error("Must failed");
-  }
-  
-	it("maxDepth", () => {
-    const target = {
-      name: "text",
-      args: [`${__dirname}/recursive/test`]
-    };
-    return inline({target, maxDepth: 10})
-      .then(mustFailed)
-      .catch(err => {
-        assert(err.message.includes("Max recursion depth 10"));
-      });
-	});
-	
-	it("shortcut", () => {
-    const target = {
-      name: "text",
-      args: [`${__dirname}/shortcut/test`]
-    };
-    return inline({target})
-      .then(content => {
-        assert(/\nOK$/.test(content));
-      });
-	});
-});
+const fs = require("fs");
+const assert = require("assert");
+const sinon = require("sinon");
 
 describe("transforms", () => {
-  const transformer = require("../lib/transformer");
+  const {DEFAULT_TRANSFORMS} = require("../lib/default-transforms");
+  const {createTransformer} = require("inline-js-core/lib/transformer");
+  const transformer = createTransformer();
+  DEFAULT_TRANSFORMS.forEach(transformer.add);
 	
   function prepare(baseOptions) {
     return options => {
-      const {name, content, args = [], expect, source} = Object.assign(
-        {}, baseOptions, options);
-      return transformer.transform(source, content, [{name, args}])
-        .then(result => assert(result === expect));
+      const {
+        name,
+        content,
+        args = [],
+        expect,
+        source,
+        error,
+        ctx = {inlineTarget: source}
+      } = Object.assign({}, baseOptions, options);
+      return transformer.transform(ctx, content, [{name, args}])
+        .then(
+          result => assert.equal(result, expect),
+          err => {
+            if (!error) {
+              throw err;
+            }
+          }
+        );
     };
   }
 	
@@ -169,6 +40,15 @@ describe("transforms", () => {
     });
     return test();
 	});
+  
+  it("docstring", () => {
+    const test = prepare({
+      name: "docstring",
+      content: "`test escaped?\\`\"\\\" new line? \\n`",
+      expect: "test escaped?`\"\" new line? \n"
+    });
+    return test();
+  });
 	
 	it("eval", () => {
     const test = prepare({
@@ -178,6 +58,29 @@ describe("transforms", () => {
       expect: 444
     });
     return test();
+  });
+  
+  describe("indent", () => {
+    const ctx = {
+      sourceContent: "  $inline('foo|indent')",
+      inlineDirective: {
+        start: 2,
+        end: 23
+      }
+    };
+    const test = prepare({
+      name: "indent",
+      content: "foo\nbar",
+      ctx,
+      expect: "foo\n  bar"
+    });
+    
+    it("basic", () => test());
+    
+    it("no indent", () => test({
+      ctx: Object.assign({}, ctx, {sourceContent: "__$inline('foo|indent')"}),
+      expect: "foo\nbar"
+    }));
   });
 	
 	it("parse", () => {
@@ -190,6 +93,36 @@ describe("transforms", () => {
       test({args: ["nested", "prop"], expect: 123})
     ]);
 	});
+  
+  it("string", () => {
+    const test = prepare({
+      name: "string",
+      content: Buffer.from("我")
+    });
+    return Promise.all([
+      test({expect: "我"}),
+      test({args: ["binary"], expect: 'æ'}),
+      test({content: "test", expect: "test"})
+    ]);
+  });
+  
+  it("stringify", () => {
+    const test = prepare({
+      name: "stringify",
+      content: "some text",
+      expect: '"some text"'
+    });
+    return test();
+  });
+  
+  it("trim", () => {
+    const test = prepare({
+      name: "trim",
+      content: " foo  ",
+      expect: "foo"
+    });
+    return test();
+  });
 	
 	it("markdown", () => {
     const test = prepare({
@@ -204,7 +137,8 @@ describe("transforms", () => {
         args: ["quote"],
         content: "some text\nsome text",
         expect: "> some text\n> some text"
-      })
+      }),
+      test({args: ["unknown"], error: true})
     ]);
 	});
 	
@@ -213,8 +147,19 @@ describe("transforms", () => {
     const test = prepare({name: "dataurl"});
     return Promise.all([
       test({
+        source: {name: "file", args: ["test"]},
+        content: fs.readFileSync(`${__dirname}/base64/test`),
+        expect: fs.readFileSync(`${__dirname}/base64/test-base64.txt`, "utf8")
+      }),
+      test({
+        source: {name: "raw", args: ["test"]},
+        args: ["text/plain", "big5"],
+        content: fs.readFileSync(`${__dirname}/base64/test-big5`),
+        expect: fs.readFileSync(`${__dirname}/base64/test-big5-base64.txt`, "utf8")
+      }),
+      test({
         source: {name: "file", args: ["test.css"]},
-        content: fs.readFileSync(`${__dirname}/base64/test.css`),
+        content: fs.readFileSync(`${__dirname}/base64/test.css`, "utf8"),
         expect: fs.readFileSync(`${__dirname}/base64/test.css-base64.txt`, "utf8")
       }),
       test({
@@ -241,7 +186,11 @@ describe("transforms", () => {
 });
 
 describe("resource", () => {
-  const resource = require("../lib/resource");
+  const path = require("path");
+  const {DEFAULT_RESOURCES} = require("../lib/default-resources");
+  const {createResourceLoader} = require("inline-js-core/lib/resource");
+  const resource = createResourceLoader();
+  DEFAULT_RESOURCES.forEach(resource.add);
   
   function prepare(baseOptions) {
     return options => {
@@ -296,7 +245,8 @@ describe("resource", () => {
     ]);
 	});
 	
-	it("cmd", () => {
+	it("cmd", t => {
+    t.timeout(5000);
     const command = 'node -e "console.log(1 + 1)"';
     const test = prepare({name: "cmd"});
 		return Promise.all([
@@ -319,52 +269,119 @@ describe("resource", () => {
         .catch(err => assert(err.message.includes("Non-zero exit code")))
     ]);
 	});
+  
+  it("resolve two paths", () => {
+    const source = {name: "text", args: ["foo/bar.txt"]};
+    const target = {name: "file", args: ["baz/bak.txt"]};
+    resource.resolve(source, target);
+    assert.equal(target.args[0], path.resolve("foo/baz/bak.txt"));
+  });
 });
 
 describe("conf", () => {
-  const MODS = ["shortcut", "resource", "transformer", "conf"];
+  const path = require("path");
+  const {findConfig, createConfigLocator} = require("../lib/conf");
   
-  function test(file, expectConfigured) {
-    MODS.forEach(name => {
-      delete require.cache[require.resolve(`../lib/${name}`)];
-    });
-    const [shortcut, resource, transformer, conf] = MODS.map(name => {
-      return require(`../lib/${name}`);
-    });
-    
-    conf.findAndLoad(file);
-    
-    assert(shortcut.has(null, "shortcutConfigured") === expectConfigured);
-    assert(resource.has("resourceConfigured") === expectConfigured);
-    assert(transformer.has("transformConfigured") === expectConfigured);
-    
-    if (expectConfigured) {
-      return Promise.all([
-        Promise.resolve(shortcut.expand(null, [{name: "shortcutConfigured", args: []}]))
-          .then(result => {
-            assert(result === "shortcutOK");
-          }),
-        resource.read(null, {name: "resourceConfigured", args: []})
-          .then(content => {
-            assert(content === "resourceOK");
-          }),
-        transformer.transform(null, "", [{name: "transformConfigured", args: []}])
-          .then(content => {
-            assert(content === "transformOK");
-          })
-      ]);
-    }
+  function test(file, expectedConfPath) {
+    return findConfig(file)
+      .then(result => {
+        if (expectedConfPath) {
+          assert.equal(result.confPath, path.resolve(expectedConfPath));
+        } else {
+          assert(!result);
+        }
+      });
   }
   
   it("find in current path", () => {
-    return test(`${__dirname}/conf/test`, true);
+    return test(`${__dirname}/conf/test`, `${__dirname}/conf/.inline.js`);
   });
   
   it("find in ancestor", () => {
-    return test(`${__dirname}/conf/b/test`, true);
+    return test(`${__dirname}/conf/b/test`, `${__dirname}/conf/.inline.js`);
   });
   
   it("don't go up through package root", () => {
-    return test(`${__dirname}/conf/a/test`, false);
+    return test(`${__dirname}/conf/a/test`, null);
+  });
+  
+  it("stop at root", () => {
+    return test("/", null);
+  });
+  
+  it("cache", () => {
+    const {tryRequire, tryAccess} = require("../lib/conf");
+    const _tryRequire = sinon.spy(tryRequire);
+    const _tryAccess = sinon.spy(tryAccess);
+    const conf = createConfigLocator({_tryRequire, _tryAccess});
+    return Promise.all([
+      conf.findConfig(`${__dirname}/conf/test`),
+      conf.findConfig(`${__dirname}/conf/b/test`)
+    ])
+      .then(([conf1, conf2]) => {
+        assert.equal(conf1, conf2);
+        assert(_tryRequire.calledTwice);
+        assert(_tryAccess.calledTwice);
+      });
+  });
+});
+
+describe("functional", () => {
+  const {init} = require("..");
+  
+  for (const dir of fs.readdirSync(`${__dirname}/functional`)) {
+    it(dir, () => {
+      let content;
+      return init({
+        "<entry_file>": `${__dirname}/functional/${dir}/entry.txt`,
+        _write: _content => {
+          content = _content;
+        }
+      })
+        .then(() => {
+          assert.equal(content, fs.readFileSync(`${__dirname}/functional/${dir}/expect.txt`, "utf8"));
+        });
+    });
+  }
+  
+  it("output file", () => {
+    let filename, content;
+    return init({
+      "<entry_file>": `${__dirname}/functional/full-config/entry.txt`,
+      "--out": "foo.txt",
+      _outputFile: (_filename, _content) => {
+        filename = _filename;
+        content = _content;
+      }
+    })
+      .then(() => {
+        assert.equal(filename, "foo.txt");
+        assert.equal(content, "  Hello I am bar");
+      });
+  });
+  
+  it("dry + out", () => {
+    const _outputFile = sinon.spy();
+    return init({
+      "<entry_file>": `${__dirname}/functional/full-config/entry.txt`,
+      "--out": "foo.txt",
+      "--dry-run": true,
+      _outputFile
+    })
+      .then(() => {
+        assert(!_outputFile.called);
+      });
+  });
+  
+  it("dry + stdout", () => {
+    const _write = sinon.spy();
+    return init({
+      "<entry_file>": `${__dirname}/functional/full-config/entry.txt`,
+      "--dry-run": true,
+      _write
+    })
+      .then(() => {
+        assert(!_write.called);
+      });
   });
 });

@@ -1,2 +1,0 @@
-$inline.shortcut('pkg', './package.json|parse:$1')
-$inline('pkg:test')
