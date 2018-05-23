@@ -1,4 +1,5 @@
 /* eslint-env mocha */
+const fs = require("fs");
 const assert = require("assert");
 const sinon = require("sinon");
 const stdMocks = require("std-mocks");
@@ -329,23 +330,28 @@ describe("conf", () => {
 describe("functional", () => {
   const {init} = require("..");
   
-  it("small example", () => {
-    stdMocks.use();
-    return init({
-      "<entry_file>": `${__dirname}/functional/entry.txt`
-    })
-      .catch(() => {})
-      .then(() => {
-        stdMocks.restore();
-        const output = stdMocks.flush();
-        assert.equal(output.stdout.join(""), "  Hello I am bar");
-      });
-  });
+  for (const dir of fs.readdirSync(`${__dirname}/functional`)) {
+    it(dir, () => {
+      stdMocks.use();
+      return init({
+        "<entry_file>": `${__dirname}/functional/${dir}/entry.txt`
+      })
+        .catch(err => {
+          stdMocks.restore();
+          throw err;
+        })
+        .then(() => {
+          stdMocks.restore();
+          const output = stdMocks.flush().stdout.join("");
+          assert.equal(output, fs.readFileSync(`${__dirname}/functional/${dir}/expect.txt`));
+        });
+    });
+  }
   
   it("output", () => {
     let filename, content;
     return init({
-      "<entry_file>": `${__dirname}/functional/entry.txt`,
+      "<entry_file>": `${__dirname}/functional/full-config/entry.txt`,
       "--out": "foo.txt",
       _outputFileSync: (_filename, _content) => {
         filename = _filename;
@@ -361,7 +367,7 @@ describe("functional", () => {
   it("dry + out", () => {
     const _outputFileSync = sinon.spy();
     return init({
-      "<entry_file>": `${__dirname}/functional/entry.txt`,
+      "<entry_file>": `${__dirname}/functional/full-config/entry.txt`,
       "--out": "foo.txt",
       "--dry-run": true,
       _outputFileSync
@@ -374,7 +380,7 @@ describe("functional", () => {
   it("dry + stdout", () => {
     stdMocks.use();
     return init({
-      "<entry_file>": `${__dirname}/functional/entry.txt`,
+      "<entry_file>": `${__dirname}/functional/full-config/entry.txt`,
       "--dry-run": true
     })
       .catch(err => {
@@ -385,38 +391,6 @@ describe("functional", () => {
         stdMocks.restore();
         const output = stdMocks.flush().stdout.join("");
         assert.equal(output, "");
-      });
-  });
-  
-  it("no config", () => {
-    let filename, content;
-    return init({
-      "<entry_file>": `${__dirname}/no-config/entry.txt`,
-      "--out": "foo.txt",
-      _outputFileSync: (_filename, _content) => {
-        filename = _filename;
-        content = _content;
-      }
-    })
-      .then(() => {
-        assert.equal(filename, "foo.txt");
-        assert.equal(content, "I am bar");
-      });
-  });
-  
-  it("empty config", () => {
-    let filename, content;
-    return init({
-      "<entry_file>": `${__dirname}/no-config/entry.txt`,
-      "--out": "foo.txt",
-      _outputFileSync: (_filename, _content) => {
-        filename = _filename;
-        content = _content;
-      }
-    })
-      .then(() => {
-        assert.equal(filename, "foo.txt");
-        assert.equal(content, "I am bar");
       });
   });
 });

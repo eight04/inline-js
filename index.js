@@ -19,6 +19,7 @@ function init({
   DEFAULT_RESOURCES.forEach(inliner.resource.add);
   DEFAULT_TRANSFORMS.forEach(inliner.transformer.add);
   
+  console.error("inline-js started\n");
   return findConfig(file)
     .then(result => {
       if (result) {
@@ -34,7 +35,6 @@ function init({
           conf.shortcuts.forEach(inliner.globalShortcuts.add);
         }
       }
-      console.error("inline-js started\n");
       return inliner.inline({name: "text", args: [file]});
     })
     .then(({content, dependency}) => {
