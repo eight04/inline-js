@@ -121,8 +121,14 @@ describe("transforms", () => {
         expect: fs.readFileSync(`${__dirname}/base64/test-base64.txt`, "utf8")
       }),
       test({
+        source: {name: "raw", args: ["test"]},
+        args: ["text/plain", "big5"],
+        content: fs.readFileSync(`${__dirname}/base64/test-big5`),
+        expect: fs.readFileSync(`${__dirname}/base64/test-big5-base64.txt`, "utf8")
+      }),
+      test({
         source: {name: "file", args: ["test.css"]},
-        content: fs.readFileSync(`${__dirname}/base64/test.css`),
+        content: fs.readFileSync(`${__dirname}/base64/test.css`, "utf8"),
         expect: fs.readFileSync(`${__dirname}/base64/test.css-base64.txt`, "utf8")
       }),
       test({
