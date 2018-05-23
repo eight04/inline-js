@@ -63,6 +63,15 @@ describe("transforms", () => {
     ]);
 	});
   
+  it("stringify", () => {
+    const test = prepare({
+      name: "stringify",
+      content: "some text",
+      expect: '"some text"'
+    });
+    return test();
+  });
+  
   it("trim", () => {
     const test = prepare({
       name: "trim",
