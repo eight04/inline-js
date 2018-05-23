@@ -17,11 +17,13 @@ Quick start
 -----------
 You have two files, `a.txt` and `b.txt`.
 <!-- $inline.skipStart("toUsage") -->
+*a.txt*
 ```js
-// a.txt
 $inline("./b.txt");
+```
 
-// b.txt
+*b.txt*
+```
 Hello world!
 ```
 Run inline-js:
@@ -55,15 +57,29 @@ An $inline directive is composed by:
   ```js
   const a = "the content of the resource";
   ```
-
-* `$inline.line(resource)`: Entire line will be replaced.
-
+  
+  If you want to expand the replace range, pass offsets to the function:
+  
   ```js
-  /* $inline.line(resource) */
+  const a = /* $inline(resource, 3, 3) */;
   ```
   Which would be converted to:
   ```js
-  the content of the resource
+  const a = the content of the resource;
+  ```
+
+* `$inline.line(resource)`: The entire line, excluding indent, will be replaced.
+
+  ```js
+  function test() {
+    /* $inline.line(resource) */
+  }
+  ```
+  Which would be converted to:
+  ```js
+  function test() {
+    the content of the resource
+  }
   ```
   
 ### Replace the text wrapped by a pair of directives
@@ -95,18 +111,20 @@ An $inline directive is composed by:
     
 ### Define shortcuts
 
-Shortcut is composed by a name and a expanding pattern. You can use `$1`, `$2`, ...`$9`, or `$&` to referece the parameters.
+A shortcut is composed by a name and an expand pattern. You can use `$1`, `$2`, ...`$9`, or `$&` to referece the parameters.
 
 ```js
-// $inline.shortcut("pkg", "../package.json|parse:$1")
-var version = $inline("pkg:version"),
-  author = $inline("pkg:author");
+// $inline.shortcut("pkg", "../package.json|parse:$&")
+const version = $inline("pkg:version");
+const author = $inline("pkg:author");
+const other = $inline("pkg:other,property");
 ```
 Which would be processed as:
 ```js
-// $inline.shortcut("pkg", "../package.json|parse:$1")
-var version = $inline("../package.json|parse:version"),
-  author = $inline("../package.json|parse:author");
+// $inline.shortcut("pkg", "../package.json|parse:$&")
+const version = $inline("../package.json|parse:version");
+const author = $inline("../package.json|parse:author");
+const other = $inline("../package.json|parse:other,property");
 ```
   
 ### Ignore `$inline` directives
@@ -130,10 +148,12 @@ $inline('path/to/file') // won't be processed
 $inline.skipEnd("skipThisSection")
 ```
 
+If `$inline.skipEnd` isn't presented, it would ignore the entire file.
+
 Resource
 --------
 
-Resource is a JavaScript string so some characters (`'`, `"`) needs to be escaped. It uses [pipe expression](https://www.npmjs.com/package/haye#pipe-expression). If written in regular expression:
+Resource is a JavaScript string so some characters (`'`, `"`) needs to be escaped. It uses pipe expression. If written in regular expression:
 
 ```
 (resourceType:)? resourceParam (| transform (: param (,param)* )? )*
@@ -153,11 +173,11 @@ $inline("path/to/file|transform1:param1,param2|transform2")
 Different resource type
 -----------------------
 
-inline-js can read content from different resources, which result in different type of the content (`string` or `Buffer`). The type of the content may also affect how transformers work (e.g. `dataurl` transformer).
+inline-js can read content from different resources, which results in different types of the content (`string` or `Buffer`). The type of the content may also affect how transformers work (e.g. `dataurl` transformer).
 
 * `file`: Default type. It reads the content from a file path, which may be relative to the file which requires the resource.
 
-  The result could be a utf8 string or a `Buffer`, depending on the extension of the file. (See [is-binary-path](https://www.npmjs.com/package/is-binary-path))
+  The result could be a utf8 string or a `Buffer`, depending on the extension of the file (see [is-binary-path](https://www.npmjs.com/package/is-binary-path)).
   
 * `text`: Like `file`, but the result is always a utf8 string.
 * `raw`: Like `file`, but the result is always a `Buffer`.
@@ -171,31 +191,35 @@ File-like resources would be cached after loaded, so inlining the same file with
 
 Command resources are also cached, but it depends on cwd. For example:
 
-* The command `cat myfile` is executed once, with `cwd = "."`.
+* In this example, the command `cat myfile` is executed once, with `cwd = "."`.
 
+  *entry.txt*
   ```js
-  // entry.txt
   $inline("a.txt")
   $inline("b.txt")
-  
-  // a.txt
+  ```
+  *a.txt*
+  ```js
   $inline("cmd:cat myfile")
-
-  // b.txt
+  ```  
+  *b.txt*
+  ```js
   $inline("cmd:cat myfile")
   ```
   
-* The command is executed twice. The first with `cwd = "."` and the second with `cwd = "./dir"`.
+* In this example, the command is executed twice. The first with `cwd = "."` and the second with `cwd = "./dir"`.
 
+  *entry.txt*
   ```js
-  // entry.txt
   $inline("a.txt")
   $inline("dir/b.txt")
-  
-  // a.txt
+  ```
+  *a.txt*
+  ```js
   $inline("cmd:cat myfile")
-
-  // dir/b.txt
+  ```
+  *dir/b.txt*
+  ```js
   $inline("cmd:cat myfile")
   ```
 
@@ -240,37 +264,37 @@ Or you can pass the mimetype manually:
 ```js
 $inline("somefile.txt|dataurl:text/css")
 ```
-Specify charset (default to `utf8` for text file):
+Specify charset (default to `utf8` for text files):
 ```js
 $inline("somefile.txt|dataurl:text/css,utf8")
 ```
 
 ### docstring
-Extract docstring (i.e. the first template literal) from the content.
+Extract docstring (i.e. the top-most template literal) from the content.
 
 ### eval
-Eval JavaScript expression. You can access the content with `$0`.
+Evaluate JavaScript expression. You can access the content with `$0`.
 ```js
 var version = $inline("./package.json|eval:JSON.parse($0).version|stringify");
 ```
 
 ### indent
-Indent the string according the the indent of the current line.
+Indent the string according to the indent of the current line.
 
-*foo.js*
+*entry.js*
 ```js
-function foo() {
-  $inline("bar.js|indent");
+function test() {
+  $inline("foo.js|indent");
 }
 ```
-*bar.js*
+*foo.js*
 ```js
 console.log("foo");
 console.log("bar");
 ```
-`inlinejs foo.js` result:
+`inlinejs entry.js` result:
 ```js
-function foo() {
+function test() {
   console.log("foo");
   console.log("bar");
 }
@@ -295,7 +319,7 @@ some text
 ````
 
 ### parse
-`JSON.parse` the content. You can access property by specify property name.
+`JSON.parse` the content. You can access properties by specifying key name.
 ```js
 var version = $inline("./package.json|parse:version"),
   nestedProp = $inline("./package.json|parse:nested,prop");
