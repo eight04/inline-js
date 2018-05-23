@@ -1,6 +1,7 @@
 /* eslint-env mocha */
 const assert = require("assert");
 const sinon = require("sinon");
+const stdMocks = require("std-mocks");
 
 describe("transforms", () => {
   const {DEFAULT_TRANSFORMS} = require("../lib/default-transforms");
@@ -321,6 +322,23 @@ describe("conf", () => {
         assert.equal(conf1, conf2);
         assert(_tryRequire.calledTwice);
         assert(_tryAccess.calledTwice);
+      });
+  });
+});
+
+describe("functional", () => {
+  const {init} = require("..");
+  
+  it("small example", () => {
+    stdMocks.use();
+    return init({
+      "<entry_file>": `${__dirname}/functional/entry.txt`
+    })
+      .catch(() => {})
+      .then(() => {
+        stdMocks.restore();
+        const output = stdMocks.flush().stdout.join("");
+        assert.equal(output, "  Hello I am foo");
       });
   });
 });
