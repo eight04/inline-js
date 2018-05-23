@@ -11,8 +11,9 @@ function init({
   "--out": out,
   "--dry-run": dryRun,
   "--max-depth": maxDepth,
-  "<entry_file>": file
-}) {
+  "<entry_file>": file,
+  _outputFileSync = fse.outputFileSync
+} = {}) {
   const inliner = createInliner({maxDepth});
   
   DEFAULT_RESOURCES.forEach(inliner.resource.add);
@@ -44,7 +45,7 @@ function init({
       if (dryRun) {
         console.error(`[dry] Output to ${out || "stdout"}`);
       } else if (out) {
-        fse.outputFileSync(out, content);
+        _outputFileSync(out, content);
       } else {
         process.stdout.write(content);
       }

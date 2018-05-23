@@ -341,4 +341,20 @@ describe("functional", () => {
         assert.equal(output.stdout.join(""), "  Hello I am bar");
       });
   });
+  
+  it("output", () => {
+    let filename, content;
+    return init({
+      "<entry_file>": `${__dirname}/functional/entry.txt`,
+      "--out": "foo.txt",
+      _outputFileSync: (_filename, _content) => {
+        filename = _filename;
+        content = _content;
+      }
+    })
+      .then(() => {
+        assert.equal(filename, "foo.txt");
+        assert.equal(content, "  Hello I am bar");
+      });
+  });
 });
