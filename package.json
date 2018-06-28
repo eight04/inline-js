@@ -26,7 +26,7 @@
   "dependencies": {
     "config-locator": "^0.1.0",
     "fs-extra": "^6.0.1",
-    "inline-js-core": "^0.3.1",
+    "inline-js-core": "^0.4.0",
     "inline-js-default-resources": "^0.1.0",
     "inline-js-default-transforms": "^0.1.1",
     "neodoc": "^2.0.0",

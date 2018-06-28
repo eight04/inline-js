@@ -3,9 +3,18 @@ const fse = require("fs-extra");
 const treeify = require("treeify");
 const {createInliner} = require("inline-js-core");
 
-const {RESOURCES} = require("inline-js-default-resources");
+const {RESOURCES, PATH_LIKE} = require("inline-js-default-resources");
 const {TRANSFORMS} = require("inline-js-default-transforms");
 const {findConfig} = require("config-locator");
+
+function createTree(children) {
+  return children.reduce((o, curr) => {
+    const name = (PATH_LIKE.has(curr.target.name) ? "" : curr.target.name + ":") +
+      curr.target.args[0];
+    o[name] = createTree(curr.children);
+    return o;
+  }, {});
+}
 
 function init({
   "--out": out,
@@ -39,10 +48,10 @@ function init({
       }
       return inliner.inline({name: "text", args: [file]});
     })
-    .then(({content, dependency}) => {
+    .then(({content, children}) => {
       _log(`Result inline tree:`);
       _log(path.resolve(file));
-      _log(treeify.asTree(dependency));
+      _log(treeify.asTree(createTree(children)));
       
       if (dryRun) {
         _log(`[dry] Output to ${out || "stdout"}`);
