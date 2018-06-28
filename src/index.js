@@ -1,4 +1,5 @@
-// import {createInliner} from "inline-js-core";
-// import {DEFAULT_TRANSFORMS} from "../lib/default-transforms";
-
-// document.querySelector("");
+import App from "./App.vue";
+new Vue({
+  el: "#app",
+  render: h => h(App)
+});

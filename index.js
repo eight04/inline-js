@@ -16,6 +16,28 @@ function createTree(children) {
   }, {});
 }
 
+function createDefaultInliner(options) {
+  const inliner = createInliner(options);
+  
+  RESOURCES.forEach(inliner.resource.add);
+  TRANSFORMS.forEach(inliner.transformer.add);
+  
+  if (options.config) {
+    const conf = options.config;
+    if (conf.resources) {
+      conf.resources.forEach(inliner.resource.add);
+    }
+    if (conf.transforms) {
+      conf.transforms.forEach(inliner.transformer.add);
+    }
+    if (conf.shortcuts) {
+      conf.shortcuts.forEach(inliner.globalShortcuts.add);
+    }
+  }
+  
+  return inliner;
+}
+
 function init({
   "--out": out,
   "--dry-run": dryRun,
@@ -25,28 +47,15 @@ function init({
   _log = console.error, // eslint-disable-line no-console
   _write = process.stdout.write.bind(process.stdout)
 }) {
-  const inliner = createInliner({maxDepth});
-  
-  RESOURCES.forEach(inliner.resource.add);
-  TRANSFORMS.forEach(inliner.transformer.add);
-  
   _log("inline-js started\n");
   return findConfig(file, {config: ".inline.js"})
     .then(result => {
+      const options = {maxDepth};
       if (result) {
-        const {config: conf, filename: confPath} = result;
-        _log(`Use config file: ${confPath}`);
-        if (conf.resources) {
-          conf.resources.forEach(inliner.resource.add);
-        }
-        if (conf.transforms) {
-          conf.transforms.forEach(inliner.transformer.add);
-        }
-        if (conf.shortcuts) {
-          conf.shortcuts.forEach(inliner.globalShortcuts.add);
-        }
+        _log(`Use config file: ${result.filename}`);
+        options.config = result.config;
       }
-      return inliner.inline({name: "text", args: [file]});
+      return createDefaultInliner(options).inline({name: "text", args: [file]});
     })
     .then(({content, children}) => {
       _log(`Result inline tree:`);
@@ -63,4 +72,4 @@ function init({
     });
 }
 
-module.exports = {init};
+module.exports = {init, createDefaultInliner};
