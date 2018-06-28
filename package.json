@@ -24,13 +24,12 @@
   ],
   "main": "index.js",
   "dependencies": {
-    "clean-css": "^4.1.11",
+    "config-locator": "^0.1.0",
     "fs-extra": "^6.0.1",
     "inline-js-core": "^0.3.1",
-    "is-binary-path": "^2.0.0",
-    "mime": "^2.3.1",
+    "inline-js-default-resources": "^0.1.0",
+    "inline-js-default-transforms": "^0.1.1",
     "neodoc": "^2.0.0",
-    "node-require-async": "^0.1.1",
     "treeify": "^1.1.0"
   },
   "devDependencies": {

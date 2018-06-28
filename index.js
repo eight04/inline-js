@@ -3,9 +3,9 @@ const fse = require("fs-extra");
 const treeify = require("treeify");
 const {createInliner} = require("inline-js-core");
 
-const {DEFAULT_RESOURCES} = require("./lib/default-resources");
-const {DEFAULT_TRANSFORMS} = require("./lib/default-transforms");
-const {findConfig} = require("./lib/conf");
+const {RESOURCES} = require("inline-js-default-resources");
+const {TRANSFORMS} = require("inline-js-default-transforms");
+const {findConfig} = require("config-locator");
 
 function init({
   "--out": out,
@@ -18,14 +18,14 @@ function init({
 }) {
   const inliner = createInliner({maxDepth});
   
-  DEFAULT_RESOURCES.forEach(inliner.resource.add);
-  DEFAULT_TRANSFORMS.forEach(inliner.transformer.add);
+  RESOURCES.forEach(inliner.resource.add);
+  TRANSFORMS.forEach(inliner.transformer.add);
   
   _log("inline-js started\n");
-  return findConfig(file)
+  return findConfig(file, {config: ".inline.js"})
     .then(result => {
       if (result) {
-        const {conf, confPath} = result;
+        const {config: conf, filename: confPath} = result;
         _log(`Use config file: ${confPath}`);
         if (conf.resources) {
           conf.resources.forEach(inliner.resource.add);
