@@ -13,6 +13,7 @@
     "version": "npm run build && git add .",
     "postversion": "git push --follow-tags && npm publish",
     "build": "node cli.js README.md -o README.md",
+    "build-doc": "rollup -c",
     "prepack": "crlf --set=LF cli.js"
   },
   "bin": {
@@ -39,7 +40,12 @@
     "mocha": "^5.2.0",
     "mocha-context": "^0.1.2",
     "nyc": "^11.8.0",
-    "sinon": "^5.0.7"
+    "rollup": "^0.62.0",
+    "rollup-plugin-copy-assets": "^1.0.0",
+    "rollup-plugin-terser": "^1.0.1",
+    "rollup-plugin-vue": "^4.3.0",
+    "sinon": "^5.0.7",
+    "vue-template-compiler": "^2.5.16"
   },
   "repository": "eight04/inline-js"
 }
