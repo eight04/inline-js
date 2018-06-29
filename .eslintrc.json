@@ -10,9 +10,12 @@
 	"extends": [
 		"eslint:recommended"
 	],
+  "parserOptions": {
+    "ecmaVersion": 8
+  },
   "overrides": [
     {
-      "files": ["src/**/*.js"],
+      "files": ["src/**/*.js", "rollup.config.js"],
       "parserOptions": {
         "sourceType": "module"
       }

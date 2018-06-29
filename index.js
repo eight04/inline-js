@@ -38,6 +38,10 @@ function createDefaultInliner(options) {
   return inliner;
 }
 
+function buildDependency(root, children) {
+  return `${root}\n${treeify.asTree(createTree(children))}`;
+}
+
 function init({
   "--out": out,
   "--dry-run": dryRun,
@@ -59,8 +63,7 @@ function init({
     })
     .then(({content, children}) => {
       _log(`Result inline tree:`);
-      _log(path.resolve(file));
-      _log(treeify.asTree(createTree(children)));
+      _log(buildDependency(path.resolve(file), children));
       
       if (dryRun) {
         _log(`[dry] Output to ${out || "stdout"}`);
@@ -72,4 +75,4 @@ function init({
     });
 }
 
-module.exports = {init, createDefaultInliner};
+module.exports = {init, createDefaultInliner, buildDependency};
