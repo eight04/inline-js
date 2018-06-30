@@ -18,7 +18,9 @@ export default {
     alias({
       fs: "src/shim/fs.js",
       util: "src/shim/util.js",
-      "clean-css": "src/shim/clean-css.js"
+      "clean-css": "src/shim/clean-css.js",
+      "fs-extra": "src/shim/empty.js",
+      "config-locator": "src/shim/empty.js"
     }),
     builtins(),
     resolve({

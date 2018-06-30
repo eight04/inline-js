@@ -13,5 +13,6 @@
   "node_modules/treeify/treeify.js": null,
   "src/App.vue?rollup-plugin-vue=script.js": null,
   "src/FileEditor.vue?rollup-plugin-vue=script.js": null,
-  "~src/shim/clean-css.js": null
+  "~src/shim/clean-css.js": null,
+  "~src/shim/empty.js": null
 }
