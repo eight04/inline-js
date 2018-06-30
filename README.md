@@ -26,9 +26,9 @@ $inline("./b.txt");
 ```
 Hello world!
 ```
-Run inline-js:
-```
-inlinejs a.txt
+Run `inlinejs` command:
+```console
+$ inlinejs a.txt
 ```
 Result:
 ```
@@ -41,75 +41,100 @@ Syntax
 An $inline directive is composed by:
 
 1. A `$inline` function.
-2. A resource definition which includes a resource and optional transformers.
+2. A resource definition, including a resource and optional transformers.
 
-`$inline` function
-------------------
+### $inline
 
-### Replace the directive with the content
+```js
+$inline(resource)
+```
 
-* `$inline(resource)`: The `$inline()` function will be replaced with the content of the file.
+The `$inline()` directive will be replaced with the content of the file.
 
-  ```js
-  const a = "$inline(resource)";
-  ```
-  Which would be converted to:
-  ```js
-  const a = "the content of the resource";
-  ```
+```js
+const a = "$inline(resource)";
+```
+Which would be converted to:
+```js
+const a = "the content of the resource";
+```
   
-  If you want to expand the replace range, pass offsets to the function:
-  
-  ```js
-  const a = /* $inline(resource, 3, 3) */;
-  ```
-  Which would be converted to:
-  ```js
-  const a = the content of the resource;
-  ```
+If you want to expand the replace range, pass offsets to the function:
 
-* `$inline.line(resource)`: The entire line, excluding indent, will be replaced.
+```js
+const a = /* $inline(resource, 3, 3) */;
+```
+Which would be converted to:
+```js
+const a = the content of the resource;
+```
 
-  ```js
-  function test() {
-    /* $inline.line(resource) */
-  }
-  ```
-  Which would be converted to:
-  ```js
-  function test() {
-    the content of the resource
-  }
-  ```
-  
-### Replace the text wrapped by a pair of directives
+### $inline.line
 
-* `$inline.start(resource)` and `$inline.end`: Mark multiple lines which would be replaced by the content. *There must be at leat one line between two directives, or there is no space to insert the content.*
+```js
+$inline.line(resource)
+```
 
-  ```js
-  /* $inline.start(resource) */
-  Multiple
-  lines
-  /* $inline.end */
-  ```
-  Which would be converted to:
-  ```js
-  /* $inline.start(resource) */
+The entire line, excluding indent, will be replaced.
+
+```js
+function test() {
+  /* $inline.line(resource) */
+}
+```
+Which would be converted to:
+```js
+function test() {
   the content of the resource
-  /* $inline.end */
-  ```
+}
+```
   
-* `$inline.open(resource, skipChars)` and `$inline.close(skipChars)`: Replace the text between two functions. `skipChars` is a number which indicates how many characters should be skipped.
+### $inline.start + $inline.end
 
-  ```html
-  <!--$inline.open(resource, 3)-->Some text<!--$inline.close(4)-->
-  ```
-  Which would be converted to:
-  ```html
-  <!--$inline.open(resource, 3)-->the content of the resource<!--$inline.close(4)-->
-  ```
+```js
+$inline.start(resource)
+...
+...
+...
+$inline.end
+```
+
+Mark multiple lines which would be replaced by the content. *There must be at leat one line between two directives, or there is no space to insert the content.*
+
+```js
+/* $inline.start(resource) */
+Multiple
+lines
+/* $inline.end */
+```
+Which would be converted to:
+```js
+/* $inline.start(resource) */
+the content of the resource
+/* $inline.end */
+```
+
+### $inline.open + $inline.close
+
+```js
+$inline.open(resource, skipChars) ... $inline.close(skipChars)
+```
+
+Replace the text between two directives. `skipChars` is a number indicating how many characters should be skipped.
+
+```html
+<!--$inline.open(resource, 3)-->Some text<!--$inline.close(4)-->
+```
+Which would be converted to:
+```html
+<!--$inline.open(resource, 3)-->the content of the resource<!--$inline.close(4)-->
+```
     
-### Define shortcuts
+### $inline.shortcut
+
+```js
+$inline.shortcut(shortcutName, expansion)
+```
 
 A shortcut is composed by a name and an expand pattern. You can use `$1`, `$2`, ...`$9`, or `$&` to referece the parameters.
 
@@ -127,7 +152,7 @@ const author = $inline("../package.json|parse:author");
 const other = $inline("../package.json|parse:other,property");
 ```
   
-### Ignore `$inline` directives
+### $inline.skipStart + $inline.skipEnd
 
 Sometimes we want to disable inline-js on some directives, we can wrap the content in `$inline.skipStart` and `$inline.skipEnd`.
 
@@ -242,6 +267,11 @@ Options:
 ```
 <!-- $inline.end -->
 <!-- $inline.skipStart("toEnd") -->
+
+Transformer
+-----------
+
+[The list of builtin transformers](https://github.com/eight04/inline-js-default-transforms#transforms)
 
 Use `.inline.js`
 ----------------
