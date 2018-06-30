@@ -19,7 +19,7 @@ function createDefaultInliner(options) {
   RESOURCES.forEach(inliner.resource.add);
   TRANSFORMS.forEach(inliner.transformer.add);
   
-  if (options.config) {
+  if (options && options.config) {
     const conf = options.config;
     if (conf.resources) {
       conf.resources.forEach(inliner.resource.add);

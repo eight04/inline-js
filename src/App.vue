@@ -1,22 +1,29 @@
 <template>
-  <div id="app" @file-update="fileUpdate" @delete-file="deleteFile">
+  <div id="app">
     <div class="file-system">
       <FileEditor
         v-for="file in files"
         :key="file.id"
         v-bind="file"
+        @file-update="updateFile(file, $event)"
+        @delete-file="deleteFile(file)"
       ></FileEditor>
       <button @click="addFile()" type="button">Add file</button>
     </div>
     <div class="inliner">
-      <div class="compile-error" v-if="compileResult && compileResult.error">{{compileResult.error}}</div>
+      <div class="compile-error" v-if="compileError">{{compileError}}</div>
       <div class="compile-success" v-else-if="compileResult">
         Compiled in {{compileResult.timeout}}ms.
         
         Dependency tree:
         <pre>{{compileResult.dependency}}</pre>
       </div>
-      <textarea class="compile-result" readonly v-model="compileResult.content"></textarea>
+      <textarea
+        v-if="compileResult"
+        class="compile-result"
+        readonly
+        v-model="compileResult.content"
+      ></textarea>
     </div>
   </div>
 </template>
@@ -66,6 +73,7 @@ export default {
       files: [],
       id: 0,
       compileResult: null,
+      compileError: null,
       compiling: null,
       compileNext: null,
       worker: createCompileWorker()
@@ -82,12 +90,17 @@ export default {
         {
           type: "text",
           name: "entry",
-          data: "$inline('foo.txt')"
+          data: "$inline('foo.txt') $inline('bar.txt')!"
         },
         {
           type: "text",
           name: "foo.txt",
-          data: "Lorem ipsum dolor."
+          data: "Hello"
+        },
+        {
+          type: "text",
+          name: "bar.txt",
+          data: "inline-js"
         }
       ];
       needUpdate = true;
@@ -101,13 +114,10 @@ export default {
     this.compile();
   },
   methods: {
-    fileUpdate(id, prop, value) {
-      const file = this.files.find(f => f.id === id);
-      if (!file) {
-        return;
-      }
-      file[prop] = value;
+    updateFile(file, e) {
+      file[e.prop] = e.data;
       this.updateURL();
+      this.compile();
     },
     updateURL() {
       const files = this.files.map(f => {
@@ -135,19 +145,24 @@ export default {
         data
       });
     },
-    deleteFile(id) {
-      const index = this.files.findIndex(f => f.id === id);
-      if (index >= 0) {
-        this.files.splice(index, 1);
-      }
+    deleteFile(file) {
+      const index = this.files.indexOf(file);
+      this.files.splice(index, 1);
     },
     compile() {
+      const drawResult = result => {
+        this.compiling = null;
+        this.compileResult = result;
+        this.compileError = null;
+      };
+      const drawError = err => {
+        this.compiling = null;
+        this.compileResult = null;
+        this.compileError = err;
+      };
       if (!this.compiling) {
         this.compiling = this.worker.compile(this.files)
-          .then(result => {
-            this.compileResult = result;
-            this.compiling = null;
-          });
+          .then(drawResult, drawError);
         return;
       }
       if (!this.compileNext) {
@@ -157,10 +172,7 @@ export default {
             this.compileNext = null;
             return this.worker.compile(this.files);
           })
-          .then(result => {
-            this.compileResult = result;
-            this.compiling = null;
-          });
+          .then(drawResult, drawError);
       }
     }
   },

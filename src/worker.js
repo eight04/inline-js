@@ -43,10 +43,13 @@ self.addEventListener("message", e => {
         timeout: performance.now() - ts
       }
     }))
-    .catch(err => ({
-      requestId: e.data.requestId,
-      error: true,
-      data: err.message
-    }))
+    .catch(err => {
+      console.error(err);
+      return {
+        requestId: e.data.requestId,
+        error: true,
+        data: err.message
+      };
+    })
     .then(message => self.postMessage(message));
 });

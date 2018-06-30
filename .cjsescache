@@ -8,15 +8,10 @@
   "node_modules/mime/Mime.js": null,
   "node_modules/mime/types/other.json": null,
   "node_modules/mime/types/standard.json": null,
-  "node_modules/process-es6/browser.js": null,
   "node_modules/rollup-plugin-node-builtins/src/es6/empty.js": null,
-  "node_modules/rollup-plugin-node-builtins/src/es6/path.js": null,
-  "node_modules/rollup-plugin-node-builtins/src/es6/vm.js": null,
   "node_modules/rollup-plugin-node-globals/src/global.js": null,
   "node_modules/treeify/treeify.js": null,
-  "src/App.vue": "src/index.js",
   "src/App.vue?rollup-plugin-vue=script.js": null,
-  "src/FileEditor.vue": "src/App.vue?rollup-plugin-vue=script.js",
   "src/FileEditor.vue?rollup-plugin-vue=script.js": null,
   "~src/shim/clean-css.js": null
 }

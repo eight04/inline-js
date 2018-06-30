@@ -1,22 +1,35 @@
+const path = require("path");
 const files = new Map;
 
-module.exports = {
-  readFile(file) {
-    if (!files.has(file)) {
-      return Promise.reject(new Error("ENOENT"));
-    }
-    return Promise.resolve(files.get(file));
-  },
-  readFileSync(file) {
-    if (!files.has(file)) {
-      throw new Error("ENOENT");
-    }
-    return files.get(file);
-  },
-  unlinkSync(file) {
-    files.delete(file);
-  },
-  writeFileSync(file, data) {
-    files.set(file, data);
+function readFileSync(file) {
+  file = path.resolve(file);
+  if (!files.has(file)) {
+    throw new Error(`file not found: ${file}`);
   }
+  return files.get(file);
+}
+
+function readFile(file) {
+  try {
+    return Promise.resolve(readFileSync(file));
+  } catch (err) {
+    return Promise.reject(err);
+  }
+}
+
+function unlinkSync(file) {
+  file = path.resolve(file);
+  files.delete(file);
+}
+
+function writeFileSync(file, data) {
+  file = path.resolve(file);
+  files.set(file, data);
+}
+
+module.exports = {
+  readFile,
+  readFileSync,
+  unlinkSync,
+  writeFileSync
 };

@@ -1,23 +1,21 @@
 <template>
   <div class="file-editor">
-    <input type="text" class="file-name" v-model="name">
-    <button type="button" @click="$emit('deleteFile', id)">Remove</button>
-    <label>
-      <input type="radio" value="text" v-model="type">
-      Text
-    </label>
-    <label>
-      <input type="radio" value="binary" v-model="type">
-      Binary
-    </label>
-    <div v-show="file.type === 'text'">
-      <textarea v-model="textData"></textarea>
+    <input type="text" class="file-name" v-model="editorName">
+    <button type="button" @click="$emit('delete-file')">Remove</button>
+    <div class="editor-type">
+      <label>
+        <input type="radio" value="text" v-model="editorType">
+        Text
+      </label>
+      <label>
+        <input type="radio" value="binary" v-model="editorType">
+        Binary
+      </label>
     </div>
-    <div v-show="file.type === 'binary'" @drop="drop" @dragover="dragover">
-      <div v-if="readingFile">Reading the file...</div>
-      <div v-else-if="!binaryData">Drop your file here.</div>
-      <div v-else>
-        {{fileType}}
+    <div class="editor-content">
+      <textarea class="text-data" v-show="type === 'text'" v-model="textData"></textarea>
+      <div class="binary-data" v-show="type === 'binary'" @drop="drop" @dragover="dragover">
+        {{binaryDataStatus}}
         <img :src="binaryData" v-if="fileType.startsWith('image')">
       </div>
     </div>
@@ -32,7 +30,7 @@ function getDataURL(file) {
       resolve(e.target.result);
     };
     reader.onerror = reject;
-    reader.readAsDataURL(file);2
+    reader.readAsDataURL(file);
   });
 }
 
@@ -45,26 +43,54 @@ export default {
   },
   data() {
     return {
+      editorName: this.name,
+      editorType: this.type,
       textData: this.type === "text" ? this.data : "",
       binaryData: this.type === "binary" ? this.data : "",
       readingFile: false
     }
   },
   mounted() {
-    for (const prop of ["name", "type"]) {
-      this.$watch(prop, () => this.$emit("fileUpdate", this.id, prop, this[prop]));
+    for (const [prop, targetProp] of [["editorName", "name"], ["editorType", "type"]]) {
+      this.$watch(prop, () => {
+        this.$emit("file-update", {
+          prop: targetProp,
+          data: this[prop]
+        });
+        if (prop === "editorType") {
+          this.$emit("file-update", {
+            prop: "data",
+            data: this.editorType === "text" ? this.textData : this.binaryData
+          });
+        }
+      });
     }
     for (const prop of ["textData", "binaryData"]) {
       this.$watch(prop, () => {
-        if (this.file.type === "text") {
-          this.$emit("fileUpdate", this.id, "data", this.textData);
-        } else if (this.file.type === "binary") {
-          this.$emit("fileUpdate", this.id, "data", this.binaryData);
+        if (this.type === "text") {
+          this.$emit("file-update", {
+            prop: "data",
+            data: this.textData
+          });
+        } else if (this.type === "binary") {
+          this.$emit("file-update", {
+            prop: "data",
+            data: this.binaryData
+          });
         }
       });
     }
   },
   computed: {
+    binaryDataStatus() {
+      if (this.readingFile) {
+        return "Reading the file...";
+      }
+      if (!this.binaryData) {
+        return "Drop your file here";
+      }
+      return this.fileType;
+    },
     fileType() {
       if (!this.binaryData) {
         return "no data";
