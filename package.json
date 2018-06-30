@@ -5,7 +5,7 @@
   "author": "eight04 <eight04@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "lint": "eslint **/*.js --ignore-pattern coverage --cache",
+    "lint": "eslint **/*.js --cache",
     "nyc": "nyc --reporter=html mocha",
     "coverage": "nyc report --reporter=text-lcov | coveralls",
     "test": "npm run lint && npm run nyc",
@@ -53,6 +53,7 @@
     "rollup-plugin-node-resolve": "^3.3.0",
     "rollup-plugin-terser": "^1.0.1",
     "rollup-plugin-vue": "^4.3.0",
+    "sinon": "^6.0.1",
     "vue-template-compiler": "^2.5.16"
   },
   "repository": "eight04/inline-js"
