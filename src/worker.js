@@ -44,7 +44,7 @@ self.addEventListener("message", e => {
       }
     }))
     .catch(err => {
-      console.error(err);
+      console.error(err); // eslint-disable-line
       return {
         requestId: e.data.requestId,
         error: true,
