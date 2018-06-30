@@ -7,6 +7,10 @@ import copy from "rollup-plugin-cpy";
 import {terser} from "rollup-plugin-terser";
 import json from "rollup-plugin-json";
 import re from "rollup-plugin-re";
+import progress from "rollup-plugin-progress";
+import esInfo from "rollup-plugin-es-info";
+import shim from "rollup-plugin-shim";
+import alias from "rollup-plugin-alias";
 
 export default {
 	input: ["src/index.js", "src/worker.js"],
@@ -16,34 +20,42 @@ export default {
 		sourcemap: true
 	},
 	plugins: [
+    alias({
+      fs: "src/shim/fs.js",
+      util: "src/shim/util.js",
+      // vm: "src/shim/vm.js",
+      // path: "src/shim/path.js",
+      "clean-css": "src/shim/clean-css.js",
+      // child_process: "src/shim/child-process.js"
+    }),
+    builtins(),
     resolve({
       extensions: [ '.mjs', '.js', '.json', '.node' ]
     }),
     json(),
     vue(),
-    re({
-      include: [
-        "**/properties/override-properties.js"
-      ],
-      patterns: [
-        {
-          test: /(var deepClone.+)\n\1/g,
-          replace: "$1"
-        }
-      ]
+    // re({
+      // patterns: [
+        // {
+          // match: /properties.override-properties\.js$/,
+          // test: /(var deepClone.+)\n\1/g,
+          // replace: "$1"
+        // }
+      // ]
+    // }),
+    cjs({
+      exclude: ["**/*.vue"],
+      nested: true
     }),
-    cjs({nested: true}),
     globals(),
-    builtins({
-      fs: true
-    }),
     copy({
       files: [
         "src/index.html"
       ],
       dest: "docs"
     }),
-    terser()
+    // terser()
 	],
+  context: "self",
   experimentalCodeSplitting: true
 };

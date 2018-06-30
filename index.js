@@ -1,11 +1,8 @@
-const path = require("path");
-const fse = require("fs-extra");
 const treeify = require("treeify");
 const {createInliner} = require("inline-js-core");
 
 const {RESOURCES, PATH_LIKE} = require("inline-js-default-resources");
 const {TRANSFORMS} = require("inline-js-default-transforms");
-const {findConfig} = require("config-locator");
 
 function createTree(children) {
   return children.reduce((o, curr) => {
@@ -42,37 +39,4 @@ function buildDependency(root, children) {
   return `${root}\n${treeify.asTree(createTree(children))}`;
 }
 
-function init({
-  "--out": out,
-  "--dry-run": dryRun,
-  "--max-depth": maxDepth,
-  "<entry_file>": file,
-  _outputFile = fse.outputFile,
-  _log = console.error, // eslint-disable-line no-console
-  _write = process.stdout.write.bind(process.stdout)
-}) {
-  _log("inline-js started\n");
-  return findConfig(file, {config: ".inline.js"})
-    .then(result => {
-      const options = {maxDepth};
-      if (result) {
-        _log(`Use config file: ${result.filename}`);
-        options.config = result.config;
-      }
-      return createDefaultInliner(options).inline({name: "text", args: [file]});
-    })
-    .then(({content, children}) => {
-      _log(`Result inline tree:`);
-      _log(buildDependency(path.resolve(file), children));
-      
-      if (dryRun) {
-        _log(`[dry] Output to ${out || "stdout"}`);
-      } else if (out) {
-        return _outputFile(out, content);
-      } else {
-        _write(content);
-      }
-    });
-}
-
-module.exports = {init, createDefaultInliner, buildDependency};
+module.exports = {createDefaultInliner, buildDependency};

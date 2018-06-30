@@ -1,15 +1,15 @@
 /* eslint-env browser */
-import fs from "fs";
-import dataUriToBuffer from "data-uri-to-buffer";
-import {createDefaultInliner, buildDependency} from "..";
+const {writeFileSync, unlinkSync} = require("fs");
+const dataUriToBuffer = require("data-uri-to-buffer");
+const {createDefaultInliner, buildDependency} = require("..");
 
 async function withFiles(files, onReady) {
   try {
     files.forEach(file => {
       if (file.type === "text") {
-        fs.writeFileSync(file.name, file.data, {flag: "wx"});
+        writeFileSync(file.name, file.data, {flag: "wx"});
       } else {
-        fs.writeFileSync(file.name, dataUriToBuffer(file.data), {flag: "wx"});
+        writeFileSync(file.name, dataUriToBuffer(file.data), {flag: "wx"});
       }
     });
     return await onReady();
