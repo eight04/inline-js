@@ -36,6 +36,13 @@ export default {
       from: "src/static",
       to: "docs"
     }),
+    {
+      transformChunk(code) {
+        return {
+          code: `(()=>{${code}})()`
+        };
+      }
+    },
     terser()
 	],
   context: "self",
