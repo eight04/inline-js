@@ -1,0 +1,1 @@
+exports.promisify = fn => fn;

@@ -5,7 +5,7 @@
   "author": "eight04 <eight04@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "lint": "eslint **/*.js --ignore-pattern coverage --cache",
+    "lint": "eslint **/*.js --cache",
     "nyc": "nyc --reporter=html mocha",
     "coverage": "nyc report --reporter=text-lcov | coveralls",
     "test": "npm run lint && npm run nyc",
@@ -13,34 +13,48 @@
     "version": "npm run build && git add .",
     "postversion": "git push --follow-tags && npm publish",
     "build": "node cli.js README.md -o README.md",
+    "build-doc": "rollup -c",
     "prepack": "crlf --set=LF cli.js"
   },
   "bin": {
     "inlinejs": "cli.js"
   },
   "files": [
-    "cli.js",
-    "lib"
+    "cli.js"
   ],
   "main": "index.js",
+  "eslintIgnore": [
+    "coverage",
+    "docs"
+  ],
   "dependencies": {
-    "clean-css": "^4.1.11",
+    "config-locator": "^0.1.0",
     "fs-extra": "^6.0.1",
-    "inline-js-core": "^0.3.1",
-    "is-binary-path": "^2.0.0",
-    "mime": "^2.3.1",
+    "inline-js-core": "^0.4.0",
+    "inline-js-default-resources": "^0.1.0",
+    "inline-js-default-transforms": "^0.1.1",
     "neodoc": "^2.0.0",
-    "node-require-async": "^0.1.1",
     "treeify": "^1.1.0"
   },
   "devDependencies": {
-    "coveralls": "^3.0.1",
+    "coveralls": "^3.0.2",
     "crlf": "^1.1.1",
+    "data-uri-to-buffer": "^2.0.0",
     "eslint": "^4.19.1",
     "mocha": "^5.2.0",
-    "mocha-context": "^0.1.2",
-    "nyc": "^11.8.0",
-    "sinon": "^5.0.7"
+    "nyc": "^11.9.0",
+    "rollup": "^0.62.0",
+    "rollup-plugin-alias": "^1.4.0",
+    "rollup-plugin-cjs-es": "^0.5.1",
+    "rollup-plugin-copied": "0.0.2",
+    "rollup-plugin-json": "^3.0.0",
+    "rollup-plugin-node-builtins": "^2.1.2",
+    "rollup-plugin-node-globals": "^1.2.1",
+    "rollup-plugin-node-resolve": "^3.3.0",
+    "rollup-plugin-terser": "^1.0.1",
+    "rollup-plugin-vue": "^4.3.0",
+    "sinon": "^6.0.1",
+    "vue-template-compiler": "^2.5.16"
   },
   "repository": "eight04/inline-js"
 }

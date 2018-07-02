@@ -1,0 +1,18 @@
+{
+  "node_modules/binary-extensions/binary-extensions.json": null,
+  "node_modules/buffer-es6/isArray.js": null,
+  "node_modules/data-uri-to-buffer/index.js": null,
+  "node_modules/is-binary-path/index.js": null,
+  "node_modules/js-tokens/index.js": null,
+  "node_modules/mime/index.js": null,
+  "node_modules/mime/Mime.js": null,
+  "node_modules/mime/types/other.json": null,
+  "node_modules/mime/types/standard.json": null,
+  "node_modules/rollup-plugin-node-builtins/src/es6/empty.js": null,
+  "node_modules/rollup-plugin-node-globals/src/global.js": null,
+  "node_modules/treeify/treeify.js": null,
+  "src/App.vue?rollup-plugin-vue=script.js": null,
+  "src/FileEditor.vue?rollup-plugin-vue=script.js": null,
+  "~src/shim/clean-css.js": null,
+  "~src/shim/empty.js": null
+}

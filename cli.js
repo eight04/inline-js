@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-var neodoc = require("neodoc"),
-	args = neodoc.run(`inlinejs
+const neodoc = require("neodoc");
+const args = neodoc.run(`inlinejs
 
 Usage:
   inlinejs [options] <entry_file>
@@ -12,10 +12,10 @@ Options:
   -n --dry-run          Print the file name instead of writing to disk.
   -h --help             Show this.
   -v --version          Show version.`, {
-		laxPlacement: true
-	});
+  laxPlacement: true
+});
 
-require("./index").init(args)
+require(".").init(args)
   .catch(err => {
     console.error(err); // eslint-disable-line no-console
     process.exit(1);
