@@ -312,6 +312,11 @@ module.exports = {
 Changelog
 ---------
 
+* 0.8.0 (Jul 2, 2018)
+
+  - **Change: config locator and builtin transformers/resources had been split out.** This repository now only contains the CLI.
+  - Add: github page, inline-js REPL.
+
 * 0.7.0 (May 23, 2018)
 
   - The core inliner logic had been splitted out as [inline-js-core](https://github.com/eight04/inline-js-core). This repository now only contains:
