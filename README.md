@@ -35,6 +35,11 @@ Result:
 Hello world!
 ```
 
+Try it online
+-------------
+
+https://eight04.github.io/inline-js/
+
 Syntax
 ------
 
@@ -58,6 +63,7 @@ Which would be converted to:
 ```js
 const a = "the content of the resource";
 ```
+[REPL](https://eight04.github.io/inline-js/#!W3sibmFtZSI6ImVudHJ5IiwidHlwZSI6InRleHQiLCJkYXRhIjoiY29uc3QgYSA9IFwiJGlubGluZSgnZm9vLnR4dCcpXCI7In0seyJuYW1lIjoiZm9vLnR4dCIsInR5cGUiOiJ0ZXh0IiwiZGF0YSI6IlRoZSBjb250ZW50IG9mIGZvby50eHQifV0=)
   
 If you want to expand the replace range, pass offsets to the function:
 
@@ -68,6 +74,7 @@ Which would be converted to:
 ```js
 const a = the content of the resource;
 ```
+[REPL](https://eight04.github.io/inline-js/#!W3sibmFtZSI6ImVudHJ5IiwidHlwZSI6InRleHQiLCJkYXRhIjoiY29uc3QgYSA9IC8qICRpbmxpbmUoXCJmb28udHh0XCIsIDMsIDMpICovOyJ9LHsibmFtZSI6ImZvby50eHQiLCJ0eXBlIjoidGV4dCIsImRhdGEiOiJUaGUgY29udGVudCBvZiBmb28udHh0In1d)
 
 ### $inline.line
 
@@ -88,6 +95,7 @@ function test() {
   the content of the resource
 }
 ```
+[REPL](https://eight04.github.io/inline-js/#!W3sibmFtZSI6ImVudHJ5IiwidHlwZSI6InRleHQiLCJkYXRhIjoiZnVuY3Rpb24gdGVzdCgpIHtcbiAgLyogJGlubGluZS5saW5lKFwiZm9vLnR4dFwiKSAqL1xufVxuIn0seyJuYW1lIjoiZm9vLnR4dCIsInR5cGUiOiJ0ZXh0IiwiZGF0YSI6IlRoZSBjb250ZW50IG9mIGZvby50eHQifV0=)
   
 ### $inline.start + $inline.end
 
@@ -113,6 +121,7 @@ Which would be converted to:
 the content of the resource
 /* $inline.end */
 ```
+[REPL](https://eight04.github.io/inline-js/#!W3sibmFtZSI6ImVudHJ5IiwidHlwZSI6InRleHQiLCJkYXRhIjoiLyogJGlubGluZS5zdGFydChcImZvby50eHRcIikgKi9cbk11bHRpcGxlXG5saW5lc1xuLyogJGlubGluZS5lbmQgKi8ifSx7Im5hbWUiOiJmb28udHh0IiwidHlwZSI6InRleHQiLCJkYXRhIjoiVGhlIGNvbnRlbnQgb2YgZm9vLnR4dCJ9XQ==)
 
 ### $inline.open + $inline.close
 
@@ -129,6 +138,7 @@ Which would be converted to:
 ```html
 <!--$inline.open(resource, 3)-->the content of the resource<!--$inline.close(4)-->
 ```
+[REPL](https://eight04.github.io/inline-js/#!W3sibmFtZSI6ImVudHJ5IiwidHlwZSI6InRleHQiLCJkYXRhIjoiPCEtLSRpbmxpbmUub3BlbihcImZvby50eHRcIiwgMyktLT5Tb21lIHRleHQ8IS0tJGlubGluZS5jbG9zZSg0KS0tPiJ9LHsibmFtZSI6ImZvby50eHQiLCJ0eXBlIjoidGV4dCIsImRhdGEiOiJUaGUgY29udGVudCBvZiBmb28udHh0In1d)
     
 ### $inline.shortcut
 
@@ -151,6 +161,7 @@ const version = $inline("../package.json|parse:version");
 const author = $inline("../package.json|parse:author");
 const other = $inline("../package.json|parse:other,property");
 ```
+[REPL](https://eight04.github.io/inline-js/#!W3sibmFtZSI6ImVudHJ5IiwidHlwZSI6InRleHQiLCJkYXRhIjoiLy8gJGlubGluZS5zaG9ydGN1dChcInBrZ1wiLCBcInBhY2thZ2UuanNvbnxwYXJzZTokJnxzdHJpbmdpZnlcIilcbmNvbnN0IHZlcnNpb24gPSAkaW5saW5lKFwicGtnOnZlcnNpb25cIik7XG5jb25zdCBhdXRob3IgPSAkaW5saW5lKFwicGtnOmF1dGhvclwiKTtcbmNvbnN0IG90aGVyID0gJGlubGluZShcInBrZzpvdGhlcixwcm9wZXJ0eVwiKTtcbiJ9LHsibmFtZSI6InBhY2thZ2UuanNvbiIsInR5cGUiOiJ0ZXh0IiwiZGF0YSI6IntcbiAgXCJ2ZXJzaW9uXCI6IFwiMC4xLjBcIixcbiAgXCJhdXRob3JcIjogXCJlaWdodDA0XCIsXG4gIFwib3RoZXJcIjoge1xuICAgIFwicHJvcGVydHlcIjogXCJmb29cIlxuICB9XG59In1d)
   
 ### $inline.skipStart + $inline.skipEnd
 
