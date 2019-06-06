@@ -31,7 +31,12 @@ self.addEventListener("message", e => {
       e.data.files,
       () => {
         const inliner = createDefaultInliner();
-        return inliner.inline({name: "text", args: [e.data.files[0].name]});
+        return inliner.inline({
+          target: {
+            name: "text",
+            args: [e.data.files[0].name]
+          }
+        });
       }
     ))
     .then(({content, children}) => ({
