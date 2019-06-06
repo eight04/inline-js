@@ -60,7 +60,12 @@ function init({
         _log(`Use config file: ${result.filename}`);
         options.config = result.config;
       }
-      return createDefaultInliner(options).inline({name: "text", args: [file]});
+      return createDefaultInliner(options).inline({
+        target: {
+          name: "text",
+          args: [file]
+        }
+      });
     })
     .then(({content, children}) => {
       _log(`Result inline tree:`);

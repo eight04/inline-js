@@ -1,6 +1,6 @@
 import resolve from "rollup-plugin-node-resolve";
 import cjs from "rollup-plugin-cjs-es";
-import builtins from "rollup-plugin-node-builtins";
+import iife from "rollup-plugin-iife";
 import globals from "rollup-plugin-node-globals";
 import vue from "rollup-plugin-vue";
 import copy from "rollup-plugin-copied";
@@ -20,12 +20,10 @@ export default {
       util: "src/shim/util.js",
       "clean-css": "src/shim/clean-css.js",
       "fs-extra": "src/shim/empty.js",
-      "config-locator": "src/shim/empty.js"
+      "config-locator": "src/shim/empty.js",
+      "path": "src/shim/path.js"
     }),
-    builtins(),
-    resolve({
-      extensions: [ '.mjs', '.js', '.json', '.node' ]
-    }),
+    resolve(),
     json(),
     vue(),
     cjs({
@@ -36,15 +34,8 @@ export default {
       from: "src/static",
       to: "docs"
     }),
-    {
-      transformChunk(code) {
-        return {
-          code: `(()=>{${code}})()`
-        };
-      }
-    },
+    iife(),
     terser()
 	],
-  context: "self",
-  experimentalCodeSplitting: true
+  context: "self"
 };
