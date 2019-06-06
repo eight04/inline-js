@@ -35,7 +35,7 @@ export default {
       to: "docs"
     }),
     iife(),
-    // terser()
+    terser()
 	],
   context: "self"
 };
