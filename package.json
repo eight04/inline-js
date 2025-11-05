@@ -5,9 +5,8 @@
   "author": "eight04 <eight04@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "lint": "eslint \"**/*.js\" --cache",
-    "unit": "c8 --reporter=lcov mocha",
-    "coverage": "c8 report --reporter=text-lcov | npx coveralls",
+    "lint": "eslint . --cache",
+    "unit": "node --test --test-reporter spec --test-reporter-destination stdout --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=lcov.info",
     "test": "npm run lint && npm run unit",
     "preversion": "npm test",
     "version": "npm run build && git add .",
@@ -37,11 +36,9 @@
     "treeify": "^1.1.0"
   },
   "devDependencies": {
-    "c8": "^5.0.1",
     "crlf": "^1.1.1",
     "data-uri-to-buffer": "^2.0.1",
     "eslint": "^5.16.0",
-    "mocha": "^6.1.4",
     "path-browserify": "^1.0.0",
     "rollup": "^1.14.2",
     "rollup-plugin-alias": "^1.5.2",
@@ -53,7 +50,6 @@
     "rollup-plugin-node-resolve": "^5.0.1",
     "rollup-plugin-terser": "^5.0.0",
     "rollup-plugin-vue": "^5.0.0",
-    "sinon": "^7.3.2",
     "vue-template-compiler": "^2.6.10"
   },
   "repository": "eight04/inline-js"
