@@ -1,7 +1,6 @@
-/* eslint-env mocha */
 const fs = require("fs");
 const assert = require("assert");
-const sinon = require("sinon");
+const {describe, it, mock} = require("node:test");
 
 describe("functional", () => {
   const {init} = require("..");
@@ -38,7 +37,7 @@ describe("functional", () => {
   });
   
   it("dry + out", () => {
-    const _outputFile = sinon.spy();
+    const _outputFile = mock.fn();
     return init({
       "<entry_file>": `${__dirname}/functional/full-config/entry.txt`,
       "--out": "foo.txt",
@@ -46,19 +45,19 @@ describe("functional", () => {
       _outputFile
     })
       .then(() => {
-        assert(!_outputFile.called);
+        assert(!_outputFile.mock.callCount());
       });
   });
   
   it("dry + stdout", () => {
-    const _write = sinon.spy();
+    const _write = mock.fn();
     return init({
       "<entry_file>": `${__dirname}/functional/full-config/entry.txt`,
       "--dry-run": true,
       _write
     })
       .then(() => {
-        assert(!_write.called);
+        assert(!_write.mock.callCount());
       });
   });
 });
