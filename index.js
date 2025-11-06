@@ -48,10 +48,17 @@ function init({
   "--dry-run": dryRun,
   "--max-depth": maxDepth,
   "<entry_file>": file,
+  "-w": writeInPlace,
   _outputFile = fse.outputFile,
   _log = console.error, // eslint-disable-line no-console
   _write = process.stdout.write.bind(process.stdout)
 }) {
+  if (writeInPlace) {
+    if (out) {
+      throw new Error("Cannot use both -o/--out and -w options");
+    }
+    out = file;
+  }
   _log("inline-js started\n");
   return findConfig(file, {config: ".inline.js"})
     .then(result => {
