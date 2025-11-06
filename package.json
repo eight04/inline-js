@@ -1,6 +1,6 @@
 {
   "name": "inline-js",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Static assets inliner",
   "author": "eight04 <eight04@gmail.com>",
   "license": "MIT",

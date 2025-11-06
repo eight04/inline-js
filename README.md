@@ -271,6 +271,7 @@ Usage:
 
 Options:
   -o --out FILE         Output file. Print to stdout if omitted.
+  -w                    Write output to the same file as the input file.
   -d --max-depth COUNT  Max depth of the dependency tree. [default: 10]
   -n --dry-run          Print the file name instead of writing to disk.
   -h --help             Show this.
