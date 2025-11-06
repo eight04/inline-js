@@ -1,7 +1,7 @@
 inline-js
 =========
 
-[![Build Status](https://travis-ci.com/eight04/inline-js.svg?branch=master)](https://travis-ci.com/eight04/inline-js)
+[![test](https://github.com/eight04/inline-js/actions/workflows/test.yml/badge.svg)](https://github.com/eight04/inline-js/actions/workflows/test.yml)
 [![Coverage Status](https://coveralls.io/repos/github/eight04/inline-js/badge.svg?branch=master)](https://coveralls.io/github/eight04/inline-js?branch=master)
 [![install size](https://packagephobia.now.sh/badge?p=inline-js)](https://packagephobia.now.sh/result?p=inline-js)
 
@@ -326,6 +326,7 @@ Changelog
 * 0.9.0 (Nov 6, 2025)
 
   - Bump dependencies.
+  - Add: `-w` option to edit file in place.
 
 * 0.8.0 (Jul 2, 2018)
 
