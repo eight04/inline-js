@@ -53,7 +53,7 @@ export default {
         console.log("unresolved import: ", moduleId);
       }
     }),
-    // terser()
+    terser()
 	],
   context: "self"
 };
