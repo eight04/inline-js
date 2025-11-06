@@ -12,7 +12,7 @@
     "version": "npm run build && git add .",
     "postversion": "git push --follow-tags && npm publish",
     "build": "node cli.js README.md -o README.md",
-    "build-doc": "rollup -c",
+    "build-doc": "shx rm -rf docs && rollup -c",
     "prepack": "crlf --set=LF cli.js"
   },
   "bin": {
@@ -22,10 +22,6 @@
     "cli.js"
   ],
   "main": "index.js",
-  "eslintIgnore": [
-    "coverage",
-    "docs"
-  ],
   "dependencies": {
     "config-locator": "^0.1.0",
     "fs-extra": "^11.3.2",
@@ -36,21 +32,25 @@
     "treeify": "^1.1.0"
   },
   "devDependencies": {
+    "@rollup/plugin-alias": "^6.0.0",
+    "@rollup/plugin-inject": "^5.0.5",
+    "@rollup/plugin-json": "*",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@web/rollup-plugin-copy": "*",
+    "buffer": "^6.0.3",
     "crlf": "^1.1.1",
-    "data-uri-to-buffer": "^2.0.1",
+    "data-uri-to-buffer": "^6.0.2",
     "eslint": "^9.39.1",
     "path-browserify": "^1.0.1",
-    "rollup": "^1.14.2",
-    "rollup-plugin-alias": "^1.5.2",
-    "rollup-plugin-cjs-es": "^0.8.0",
-    "rollup-plugin-copied": "0.0.3",
-    "rollup-plugin-iife": "^0.2.0",
-    "rollup-plugin-json": "^4.0.0",
-    "rollup-plugin-node-globals": "^1.4.0",
-    "rollup-plugin-node-resolve": "^5.0.1",
-    "rollup-plugin-terser": "^5.0.0",
-    "rollup-plugin-vue": "^5.0.0",
-    "vue-template-compiler": "^2.7.16"
+    "path-browserify-esm": "^1.0.6",
+    "rollup": "^4.52.5",
+    "rollup-plugin-cjs-es": "^3.0.0",
+    "rollup-plugin-external-globals": "^0.13.0",
+    "rollup-plugin-iife": "^0.7.1",
+    "rollup-plugin-vue": "^6.0.0",
+    "shx": "^0.4.0",
+    "tiny-glob": "^0.2.9"
   },
   "repository": "eight04/inline-js"
 }

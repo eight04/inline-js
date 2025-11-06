@@ -29,6 +29,7 @@
 </template>
 
 <script>
+import {toRaw} from "vue";
 import FileEditor from "./FileEditor.vue";
 
 function createCompileWorker() {
@@ -45,7 +46,7 @@ function createCompileWorker() {
     }
     return new Promise((resolve, reject) => {
       const requestId = id++;
-      worker.postMessage({requestId, files});
+      worker.postMessage({requestId, files: toRaw(files)});
       waitForResponse.set(requestId, {resolve, reject});
     });
   }
@@ -159,6 +160,7 @@ export default {
         this.compiling = null;
         this.compileResult = null;
         this.compileError = err;
+        console.error(err);
       };
       if (!this.compiling) {
         this.compiling = this.worker.compile(this.files)
