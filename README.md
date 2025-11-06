@@ -323,6 +323,10 @@ module.exports = {
 Changelog
 ---------
 
+* 0.9.0 (Nov 6, 2025)
+
+  - Bump dependencies.
+
 * 0.8.0 (Jul 2, 2018)
 
   - **Change: config locator and builtin transformers/resources had been split out.** This repository now only contains the CLI.
