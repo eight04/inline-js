@@ -15,9 +15,8 @@ import glob from "tiny-glob";
 
 const shim = Object.fromEntries(
   (await glob("src/shim/*.js")).map(f => {
-    const name = f.slice("src/shim/".length, -3);
     return [
-      name,
+      path.parse(f).name,
       path.resolve(f)
     ];
   })
